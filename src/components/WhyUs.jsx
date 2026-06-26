@@ -1,40 +1,33 @@
 import React from 'react';
 
-export default function WhyUs({ setShowModal }) {
+export default function WhyUs() {
   const features = [
-    { title: "Qualified Faculty", desc: "Learn from experienced educators dedicated to your academic success." },
-    { title: "Flexible Daily Lectures", desc: "Schedules designed to balance your school and coaching effectively." },
-    { title: "Weekly Offline Tests", desc: "Regular physical assessments to track progress and exam readiness." },
-    { title: "Comprehensive Materials", desc: "In-depth study resources and notes covering the entire syllabus." },
-    { title: "Extensive MCQ Practice", desc: "Thousands of practice questions curated for JEE, NEET, and CET." },
-    { title: "Personalized Doubt Sessions", desc: "One-on-one attention to clear complex concepts and build confidence." },
-    { title: "Thorough Revisions", desc: "Structured, repetitive revision plans before all major examinations." },
-    { title: "Video & Test Portal", desc: "24/7 digital access to recorded lectures and online mock exams." }
+    { icon: "🎓", title: "Expert Faculty", desc: "Highly experienced teachers with proven track records in coaching for competitive exams." },
+    { icon: "📋", title: "Regular Test Series", desc: "Weekly tests and full-length mock exams modeled on the latest exam patterns." },
+    { icon: "💬", title: "Doubt Solving", desc: "Dedicated one-on-one doubt clearing sessions so no concept is ever left behind." },
+    { icon: "📘", title: "Study Material", desc: "Engineered comprehensive modules designed for maximum academic performance." },
+    { icon: "👥", title: "Small Batches", desc: "Limited student intake per batch ensures highly personalized attention." },
+    { icon: "🏆", title: "Proven Results", desc: "Consistent track record of producing top rankers in state and national exams." }
   ];
 
   return (
-    <section id="why-us" className="why-us-section">
-      <div className="section-header">
-        <h2 className="thin-italic-display">Why Choose Us?</h2>
-        <p>The pillars of our coaching methodology.</p>
-      </div>
-      
-      <div className="features-grid">
-        {features.map((feature, index) => (
-          <div className="feature-card" key={index}>
-            <div className="feature-icon">✦</div>
-            <h3>{feature.title}</h3>
-            <p>{feature.desc}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="cta-banner">
-        <h2 className="thin-italic-display">Get a Free Counselling Session</h2>
-        <p>Speak with our academic experts to map out your perfect learning strategy.</p>
-        <button className="primary-btn gold-btn" onClick={() => setShowModal(true)}>
-          Enquire Now
-        </button>
+    <section id="why-us" className="dark-section">
+      <div className="section-inner">
+        <div className="section-header" style={{ color: 'white' }}>
+          <span className="section-tag">Why Choose Us</span>
+          <h2 style={{ color: 'white' }}>Everything your child needs to succeed</h2>
+          <p style={{ color: 'var(--text-muted-light)' }}>Engineered classroom setups configured entirely for maximum attention and academic performance.</p>
+        </div>
+        
+        <div className="why-us-grid">
+          {features.map((feature, idx) => (
+            <div className="why-card" key={idx}>
+              <div className="why-icon">{feature.icon}</div>
+              <h3>{feature.title}</h3>
+              <p>{feature.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

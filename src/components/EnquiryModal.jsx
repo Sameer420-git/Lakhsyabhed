@@ -1,24 +1,30 @@
 import React, { useState } from 'react';
 
 export default function EnquiryModal({ setShowModal, handleEnquirySubmit }) {
-  const [formData, setFormData] = useState({ name: '', phone: '', course: '11' });
+  const [formData, setFormData] = useState({ name: '', phone: '', course: 'XI-XII Science' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    handleEnquirySubmit(formData); // Pass data up to App.jsx
+    setIsSubmitting(true);
+    // Send data to the handleEnquirySubmit function in App.jsx (which sends it to Supabase)
+    await handleEnquirySubmit(formData); 
+    setIsSubmitting(false);
   };
 
   return (
     <div className="modal-overlay" onClick={() => setShowModal(false)}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
-        <h3>Start Your Journey</h3>
+        <h3 className="modal-title">Start Your Journey</h3>
+        
         <form onSubmit={onSubmit}>
           <div className="input-group">
             <label>Full Name</label>
             <input 
               type="text" 
               required 
+              placeholder="Student Name"
               value={formData.name}
               onChange={e => setFormData({...formData, name: e.target.value})}
             />
@@ -29,7 +35,8 @@ export default function EnquiryModal({ setShowModal, handleEnquirySubmit }) {
               type="tel" 
               required 
               pattern="[0-9]{10}"
-              title="10 digit mobile number"
+              title="Please enter exactly 10 digits"
+              placeholder="10-digit mobile number"
               value={formData.phone}
               onChange={e => setFormData({...formData, phone: e.target.value})}
             />
@@ -40,17 +47,22 @@ export default function EnquiryModal({ setShowModal, handleEnquirySubmit }) {
               value={formData.course}
               onChange={e => setFormData({...formData, course: e.target.value})}
             >
-              <option value="11">Class 11</option>
-              <option value="12 pcm">Class 12 (PCM)</option>
-              <option value="12 pcb">Class 12 (PCB)</option>
-              <option value="12 pcmb">Class 12 (PCMB)</option>
-              <option value="mhtcet">MHT-CET</option>
-              <option value="jee">JEE Main/Adv</option>
-              <option value="neet">NEET</option>
-              <option value="combo">Combo Batches</option>
+              <option value="XI-XII Science">XI-XII Science (HSC)</option>
+              <option value="MHT-CET">MHT-CET</option>
+              <option value="NEET">NEET (UG)</option>
+              <option value="JEE">JEE Main & Advanced</option>
+              <option value="Combo Batches">Combo Batches</option>
+              <option value="Foundation">Foundation (VIII-X)</option>
             </select>
           </div>
-          <button type="submit" className="submit-btn">Submit Enquiry</button>
+          
+          <button 
+            type="submit" 
+            className="btn-yellow submit-btn" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Enquiry'}
+          </button>
         </form>
       </div>
     </div>

@@ -4,8 +4,10 @@ import './App.css';
 
 import Header from './components/Header';
 import Hero from './components/Hero';
+import About from './components/About';
 import Courses from './components/Courses';
 import WhyUs from './components/WhyUs';
+import Footer from './components/Footer';
 import EnquiryModal from './components/EnquiryModal';
 
 function App() {
@@ -28,12 +30,14 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header />
+      <Header setShowModal={setShowModal} />
       <main>
         <Hero setShowModal={setShowModal} />
+        <About /> 
+        <WhyUs />
         <Courses setShowModal={setShowModal} /> 
-        <WhyUs setShowModal={setShowModal} /> 
       </main>
+      <Footer />
       
       {showModal && (
         <EnquiryModal 
