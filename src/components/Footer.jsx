@@ -1,11 +1,14 @@
 import React from 'react';
+import logo from '../assets/logo.png'; // Import the image file here
 
 export default function Footer() {
   return (
     <footer>
       <div className="footer-grid">
         <div className="footer-brand">
-          <div className="logo-box">LI</div>
+          {/* Replaced the logo-box div with the actual image */}
+          <img src={logo} alt="Lakhsyabhed Institute Logo" className="brand-logo" />
+          
           <h2>Lakhsyabhed Institute</h2>
           <p>Guiding students to their dream careers through structured curriculum and expert mentorship.</p>
         </div>

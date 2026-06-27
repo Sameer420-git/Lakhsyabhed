@@ -18,12 +18,15 @@ function App() {
       const { error } = await supabase
         .from('enquiries')
         .insert([{ name: formData.name, phone: formData.phone, course: formData.course }]);
+      
       if (error) throw error;
       
+      // Data is secure. Close the modal instantly without interrupting the user.
       setShowModal(false);
-      alert("Enquiry submitted successfully! Our team will contact you shortly.");
+      
     } catch (error) {
       console.error("Error submitting enquiry:", error.message);
+      // We keep the error alert just in case their internet drops, so they know it failed.
       alert("There was an error submitting your enquiry. Please try again.");
     }
   };

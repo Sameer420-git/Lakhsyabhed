@@ -68,19 +68,18 @@ body {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
-.brand { display: flex; align-items: center; gap: 1rem; }
-.logo-box {
-  background-color: var(--brand-yellow);
-  color: var(--brand-navy);
-  font-weight: 800;
-  font-size: 1.2rem;
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
+.brand { 
+  display: flex; 
+  align-items: center; 
+  gap: 1rem; 
 }
+
+.brand-logo {
+  height: 45px;
+  width: auto;
+  object-fit: contain;
+}
+
 .brand-text h1 { font-size: 1.2rem; font-weight: 800; color: var(--brand-navy); line-height: 1.2; }
 .brand-text p { font-size: 0.75rem; color: var(--text-muted-dark); }
 
@@ -154,11 +153,44 @@ nav a:hover { color: var(--brand-navy); }
 /* --- Footer --- */
 footer { background: #030812; padding: 4rem 5% 2rem; color: var(--text-muted-light); border-top: 1px solid rgba(255,255,255,0.05); }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 4rem; max-width: 1300px; margin: 0 auto; padding-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-.footer-brand .logo-box { margin-bottom: 1rem; }
+.footer-brand .brand-logo { margin-bottom: 1rem; }
 .footer-brand h2 { color: white; margin-bottom: 0.5rem; }
 .footer-links h4 { color: white; margin-bottom: 1.5rem; }
 .footer-links p, .footer-links a { color: var(--text-muted-light); text-decoration: none; margin-bottom: 0.8rem; display: block; font-size: 0.95rem; }
 .footer-bottom { text-align: center; padding-top: 2rem; font-size: 0.85rem; }
+
+/* --- Modal Overlays --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%;
+  background: rgba(7, 18, 36, 0.85); 
+  backdrop-filter: blur(4px);
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  z-index: 200;
+}
+.modal-content {
+  background: white; 
+  padding: 3rem; 
+  border-radius: 16px;
+  width: 90%; 
+  max-width: 450px; 
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+.modal-title { color: var(--brand-navy); font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem; }
+.close-btn { position: absolute; top: 1rem; right: 1.5rem; font-size: 1.8rem; color: var(--text-muted-light); background: none; border: none; cursor: pointer; transition: 0.2s; }
+.close-btn:hover { color: var(--brand-navy); }
+.input-group { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.input-group label { color: var(--brand-navy); font-weight: 700; font-size: 0.9rem; }
+.input-group input, .input-group select { padding: 0.9rem; border: 1px solid var(--border-color); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.95rem; background: #f8fafc; }
+.input-group input:focus, .input-group select:focus { outline: 2px solid var(--brand-yellow); border-color: transparent; }
+.submit-btn { width: 100%; margin-top: 0.5rem; font-size: 1.1rem; }
+.submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
 /* --- Mobile Responsiveness --- */
 @media (max-width: 992px) {
@@ -172,89 +204,4 @@ footer { background: #030812; padding: 4rem 5% 2rem; color: var(--text-muted-lig
   .hero-content h2 { font-size: 2.5rem; }
   .features-pills { grid-template-columns: 1fr; }
   .hero-btns { flex-direction: column; width: 100%; }
-}
-/* --- Modal Overlays --- */
-.modal-overlay {
-  position: fixed;
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100%;
-  background: rgba(7, 18, 36, 0.85); /* Matches brand navy */
-  backdrop-filter: blur(4px);
-  display: flex; 
-  justify-content: center; 
-  align-items: center;
-  z-index: 200;
-}
-
-.modal-content {
-  background: white; 
-  padding: 3rem; 
-  border-radius: 16px;
-  width: 90%; 
-  max-width: 450px; 
-  position: relative;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-.modal-title {
-  color: var(--brand-navy);
-  font-size: 1.5rem;
-  font-weight: 800;
-  margin-bottom: 1.5rem;
-}
-
-.close-btn { 
-  position: absolute; 
-  top: 1rem; 
-  right: 1.5rem; 
-  font-size: 1.8rem; 
-  color: var(--text-muted-light);
-  background: none; 
-  border: none; 
-  cursor: pointer; 
-  transition: 0.2s;
-}
-
-.close-btn:hover {
-  color: var(--brand-navy);
-}
-
-.input-group { 
-  margin-bottom: 1.5rem; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 0.5rem; 
-}
-
-.input-group label {
-  color: var(--brand-navy);
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.input-group input, .input-group select { 
-  padding: 0.9rem; 
-  border: 1px solid var(--border-color); 
-  border-radius: 8px; 
-  font-family: 'Inter', sans-serif;
-  font-size: 0.95rem;
-  background: #f8fafc;
-}
-
-.input-group input:focus, .input-group select:focus {
-  outline: 2px solid var(--brand-yellow);
-  border-color: transparent;
-}
-
-.submit-btn { 
-  width: 100%; 
-  margin-top: 0.5rem;
-  font-size: 1.1rem;
-}
-
-.submit-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }
