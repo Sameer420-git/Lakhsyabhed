@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
 :root {
-  /* Client Specific Color Palette */
   --brand-navy: #071224;
   --brand-navy-light: #0f1c35;
   --brand-yellow: #f59e0b;
@@ -41,45 +40,23 @@ body {
 }
 .dark-section .section-tag { background: rgba(255,255,255,0.05); color: var(--brand-yellow); border: 1px solid rgba(255,255,255,0.1); }
 .light-section .section-tag { background: #d1d5db; color: #1d4ed8; }
-
 .text-yellow { color: var(--brand-yellow); }
 
 /* --- Top Bar & Header --- */
-.top-bar {
-  background-color: #030812;
-  color: #94a3b8;
-  font-size: 0.85rem;
-  padding: 0.5rem 5%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+.top-bar { background-color: #030812; color: #94a3b8; font-size: 0.85rem; padding: 0.5rem 5%; display: flex; justify-content: space-between; align-items: center; }
 .top-bar span { color: var(--brand-yellow); font-weight: 600; }
 
-.main-header {
-  background-color: #e2e8f0;
-  padding: 1rem 5%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-}
-
-.brand { 
-  display: flex; 
-  align-items: center; 
-  gap: 1rem; 
-}
-
+.main-header { background-color: #e2e8f0; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.brand { display: flex; align-items: center; gap: 1rem; }
 .brand-logo {
-  height: 65px;
+  height: 45px;       /* Keeps the structural footprint identical so navbar doesn't stretch */
   width: auto;
   object-fit: contain;
+  
+  /* The Magic Trick */
+  transform: scale(1.4);          /* Visually enlarges the logo by 40% */
+  transform-origin: left center;  /* Ensures it grows outward to the right, not off the screen */
 }
-
 .brand-text h1 { font-size: 1.2rem; font-weight: 800; color: var(--brand-navy); line-height: 1.2; }
 .brand-text p { font-size: 0.75rem; color: var(--text-muted-dark); }
 
@@ -107,81 +84,177 @@ nav a:hover { color: var(--brand-navy); }
 .about-content h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
 .about-content p { font-size: 1.1rem; color: var(--text-muted-dark); margin-bottom: 2rem; }
 .features-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.pill-check {
-  display: flex; align-items: center; gap: 1rem;
-  background: white; border: 1px solid var(--border-color);
-  padding: 1rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem;
-}
+.pill-check { display: flex; align-items: center; gap: 1rem; background: white; border: 1px solid var(--border-color); padding: 1rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; }
 .check-icon { color: var(--brand-yellow); font-size: 1.2rem; }
+
+/* --- Why Us Section --- */
+.why-us-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+.why-card { background: var(--brand-navy-light); border: 1px solid rgba(255,255,255,0.05); padding: 2.5rem; border-radius: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.why-icon { background: var(--brand-yellow); color: var(--brand-navy); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 1.5rem; margin-bottom: 1.5rem; }
+.why-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; color: white; }
+.why-card p { color: var(--text-muted-light); font-size: 0.95rem; line-height: 1.5; }
+
+/* ========================================= */
+/* --- COVER FLOW FACULTY CAROUSEL --- */
+/* ========================================= */
+#faculty-section {
+  background-color: #ffffff; 
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.faculty-inner {
+  padding-top: 4rem;
+  padding-bottom: 3rem;
+  max-width: 100%; /* Break max-width so arrows can go to edges */
+}
+
+/* Minimalist Header */
+.custom-section-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 3rem; }
+.custom-section-header h2 { font-size: 2.2rem; font-weight: 800; color: var(--brand-navy); letter-spacing: -0.02em; }
+.header-accent { width: 60px; height: 4px; background: var(--brand-yellow); margin-top: 0.8rem; border-radius: 2px; }
+
+/* Structural Track setup */
+.carousel-container {
+  width: 100%;
+  padding: 0 2rem; /* Buffer from screen edges */
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.carousel-viewport {
+  position: relative;
+  width: 100%;
+  height: 380px; /* Fixed height for absolute cards */
+  overflow: hidden; /* Neatly clips the far edges of the side cards */
+  margin: 0 2rem; /* Spacing between cards and arrows */
+}
+
+.carousel-track {
+  position: absolute;
+  top: 0; left: 0; 
+  width: 100%; height: 100%;
+}
+
+/* Absolute Positioning for Cover Flow */
+.faculty-slide {
+  position: absolute;
+  top: 10px; /* Slight buffer for the shadow */
+  left: 50%;
+  width: 100%;
+  max-width: 600px;
+  transition: all 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-origin: center center;
+}
+
+/* --- The Magic Cover Flow Classes --- */
+.slide-active {
+  transform: translateX(-50%) scale(1);
+  z-index: 10;
+  opacity: 1;
+  filter: blur(0);
+  pointer-events: auto; /* Clickable */
+}
+
+.slide-prev {
+  transform: translateX(calc(-50% - 360px)) scale(0.85);
+  z-index: 5;
+  opacity: 0.45;
+  filter: blur(4px);
+  pointer-events: none; /* Ignored by clicks */
+}
+
+.slide-next {
+  transform: translateX(calc(-50% + 360px)) scale(0.85);
+  z-index: 5;
+  opacity: 0.45;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.slide-hidden {
+  transform: translateX(-50%) scale(0.5);
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* --- 3D Flip Card Architecture --- */
+.faculty-card-container {
+  width: 100%;
+  perspective: 1500px;
+  cursor: pointer;
+}
+
+.faculty-card-inner {
+  position: relative;
+  width: 100%;
+  min-height: 280px; 
+  transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.faculty-card-container.flipped .faculty-card-inner { transform: rotateY(-180deg); }
+
+.faculty-card-front, .faculty-card-back {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  backface-visibility: hidden; border-radius: 12px;
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.15); overflow: hidden; 
+}
+
+/* --- Front Styling (50:50 Split) --- */
+.faculty-card-front { background: white; border: 1px solid var(--border-color); display: flex; }
+.faculty-front-left { flex: 0.8; background: #f8fafc; display: flex; justify-content: center; align-items: center; border-right: 1px solid var(--border-color); padding: 1.5rem; }
+.faculty-front-right { flex: 1.2; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 1.5rem 2rem; text-align: left; }
+
+/* --- Back Styling --- */
+.faculty-card-back { background: var(--brand-navy-light); border: 1px solid rgba(255,255,255,0.1); transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; }
+
+/* --- Internal Card Elements --- */
+.faculty-avatar { width: 100px; height: 100px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 3px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.faculty-avatar svg { width: 45px; height: 45px; color: var(--text-muted-light); }
+
+.faculty-name { font-size: 1.4rem; font-weight: 800; color: var(--brand-navy); margin-bottom: 0.2rem; line-height: 1.2; }
+.faculty-name-back { font-size: 1.2rem; font-weight: 700; color: white; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.faculty-role { color: var(--brand-yellow); font-weight: 700; font-size: 0.9rem; margin-bottom: 0.5rem; }
+.faculty-qual { color: var(--brand-navy); font-size: 0.8rem; font-weight: 600; background: #e2e8f0; padding: 0.3rem 0.8rem; border-radius: 20px; margin-top: 0.5rem; display: inline-block; }
+.faculty-desc { color: #e2e8f0; font-size: 0.85rem; line-height: 1.6; }
+.flip-hint { margin-top: 1.5rem; font-size: 0.75rem; font-weight: 600; color: var(--text-muted-light); letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* --- Controls --- */
+.carousel-btn { background: white; border: 1px solid var(--border-color); color: var(--brand-navy); width: 50px; height: 50px; border-radius: 50%; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s; flex-shrink: 0; }
+.carousel-btn:hover { background: var(--brand-navy); color: white; }
+
+.carousel-dots { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; cursor: pointer; transition: 0.3s; }
+.dot.active { background: var(--brand-yellow); width: 25px; border-radius: 10px; }
 
 /* --- Courses Section --- */
 .section-header { text-align: center; margin-bottom: 3rem; }
 .section-header h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
 .section-header p { color: var(--text-muted-dark); font-size: 1.1rem; }
 .courses-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; }
-.course-card {
-  background: #f8fafc; border: 1px solid var(--border-color);
-  padding: 1.5rem; border-radius: 16px;
-  display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; transition: 0.2s;
-}
+.course-card { background: #f8fafc; border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
 .course-card:hover { border-color: #94a3b8; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
 .course-card-left { display: flex; align-items: center; gap: 1rem; }
-.course-icon {
-  background: var(--bg-light); color: var(--brand-navy);
-  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; font-size: 1.2rem;
-}
+.course-icon { background: var(--bg-light); color: var(--brand-navy); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.2rem; }
 .course-card h3 { font-size: 1.1rem; font-weight: 700; color: var(--brand-navy); }
-.enquire-link { color: #1d4ed8; font-weight: 600; font-size: 0.9rem; }
-
-/* --- Why Us Section --- */
-.why-us-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
-.why-card {
-  background: var(--brand-navy-light); border: 1px solid rgba(255,255,255,0.05);
-  padding: 2.5rem; border-radius: 16px; text-align: center;
-  display: flex; flex-direction: column; align-items: center;
-}
-.why-icon {
-  background: var(--brand-yellow); color: var(--brand-navy);
-  width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
-  border-radius: 12px; font-size: 1.5rem; margin-bottom: 1.5rem;
-}
-.why-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; color: white; }
-.why-card p { color: var(--text-muted-light); font-size: 0.95rem; line-height: 1.5; }
 
 /* --- Footer --- */
 footer { background: #030812; padding: 4rem 5% 2rem; color: var(--text-muted-light); border-top: 1px solid rgba(255,255,255,0.05); }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 4rem; max-width: 1300px; margin: 0 auto; padding-bottom: 3rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-.footer-brand .brand-logo { margin-bottom: 1rem; }
+.footer-brand .brand-logo { margin-bottom: 1rem; filter: brightness(0) invert(1); }
 .footer-brand h2 { color: white; margin-bottom: 0.5rem; }
 .footer-links h4 { color: white; margin-bottom: 1.5rem; }
 .footer-links p, .footer-links a { color: var(--text-muted-light); text-decoration: none; margin-bottom: 0.8rem; display: block; font-size: 0.95rem; }
 .footer-bottom { text-align: center; padding-top: 2rem; font-size: 0.85rem; }
 
 /* --- Modal Overlays --- */
-.modal-overlay {
-  position: fixed;
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100%;
-  background: rgba(7, 18, 36, 0.85); 
-  backdrop-filter: blur(4px);
-  display: flex; 
-  justify-content: center; 
-  align-items: center;
-  z-index: 200;
-}
-.modal-content {
-  background: white; 
-  padding: 3rem; 
-  border-radius: 16px;
-  width: 90%; 
-  max-width: 450px; 
-  position: relative;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 18, 36, 0.85); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 200; }
+.modal-content { background: white; padding: 3rem; border-radius: 16px; width: 90%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
 .modal-title { color: var(--brand-navy); font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem; }
 .close-btn { position: absolute; top: 1rem; right: 1.5rem; font-size: 1.8rem; color: var(--text-muted-light); background: none; border: none; cursor: pointer; transition: 0.2s; }
 .close-btn:hover { color: var(--brand-navy); }
@@ -200,8 +273,365 @@ footer { background: #030812; padding: 4rem 5% 2rem; color: var(--text-muted-lig
   nav { display: none; }
   .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
 }
+
+@media (max-width: 768px) {
+  .carousel-viewport { height: 480px; margin: 0 1rem; } /* Extra height for stacked mobile cards */
+  .slide-prev, .slide-next { opacity: 0; visibility: hidden; } /* Hide sides on mobile */
+  .faculty-card-front { flex-direction: column; }
+  .faculty-front-left { border-right: none; border-bottom: 1px solid var(--border-color); padding: 1.5rem; }
+  .faculty-front-right { align-items: center; text-align: center; padding: 1.5rem; }
+  .faculty-card-inner { min-height: 440px; }
+  .carousel-btn { display: none; } 
+}
+
 @media (max-width: 600px) {
   .hero-content h2 { font-size: 2.5rem; }
   .features-pills { grid-template-columns: 1fr; }
   .hero-btns { flex-direction: column; width: 100%; }
+}
+
+/* ========================================= */
+/* --- ADMIN DASHBOARD (NOTION STYLE) --- */
+/* ========================================= */
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr; /* This is the magic line: 260px sidebar, 1fr main content */
+  height: 100vh;
+  background-color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+/* --- Sidebar --- */
+/* (Keep your existing .admin-sidebar code here...) */
+
+.sidebar-brand {
+  padding: 0 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar-brand h2 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--brand-navy);
+  margin-bottom: 0.2rem;
+}
+
+.brand-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--brand-yellow);
+  color: var(--brand-navy);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex-grow: 1;
+  align-items: stretch; /* Forces items to fill the width */
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: transparent;
+  border: 1px solid transparent; /* Prevents the indentation jump */
+  border-radius: 6px;
+  color: var(--text-muted-dark);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.nav-item svg { 
+  width: 18px; 
+  height: 18px; 
+  flex-shrink: 0; 
+}
+
+.nav-item:hover { 
+  background: #e2e8f0; 
+  color: var(--brand-navy); 
+}
+
+.nav-item.active {
+  background: white;
+  color: var(--brand-navy);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.logout-btn {
+  margin-top: auto;
+  color: #ef4444;
+}
+.logout-btn:hover { 
+  background: #fef2f2; 
+  color: #dc2626; 
+  border-color: #fca5a5; 
+}
+
+/* --- Main Content Area --- */
+.admin-main {
+  padding: 3rem 4rem;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 3rem;
+}
+
+.admin-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--brand-navy);
+  margin-bottom: 0.3rem;
+  letter-spacing: -0.02em;
+}
+
+.admin-subtitle {
+  color: var(--text-muted-light);
+  font-size: 0.95rem;
+}
+
+.btn-notion-primary {
+  background: var(--brand-navy);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: 0.2s;
+}
+
+.btn-notion-primary:hover { background: var(--brand-navy-light); }
+
+/* --- Notion Table Implementation --- */
+.notion-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.notion-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.notion-table th {
+  font-weight: 500;
+  color: var(--text-muted-light);
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.notion-row {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.1s;
+}
+
+.notion-row:hover { background-color: #f8fafc; }
+
+.notion-table td {
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  vertical-align: middle;
+}
+
+.notion-table .actions {
+  color: var(--text-muted-light);
+  cursor: pointer;
+  text-align: right;
+  letter-spacing: 0.1em;
+}
+
+.notion-table .actions:hover { color: var(--brand-navy); }
+
+/* Utility Text Classes for the Table */
+.font-medium { font-weight: 600; }
+.text-dark { color: #0f172a; }
+.text-muted { color: #64748b; }
+
+/* --- Notion Tags (Badges) --- */
+.notion-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.notion-tag.gray { background: #f1f5f9; color: #475569; }
+.notion-tag.green { background: #dcfce7; color: #166534; }
+.notion-tag.red { background: #fee2e2; color: #991b1b; }
+.notion-tag.blue { background: #e0f2fe; color: #075985; }
+.notion-tag.orange { background: #ffedd5; color: #9a3412; }
+
+/* --- CMS Split Sections (Forced Vertical Layout) --- */
+.cms-sections {
+  display: flex;
+  flex-direction: column !important; /* The !important forces it to stack vertically */
+  gap: 3.5rem; /* Adds generous breathing room between the two tables */
+  width: 100%;
+}
+
+.cms-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cms-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brand-navy);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f1f5f9;
+  display: inline-block;
+  width: 100%;
+}
+
+/* ========================================= */
+/* --- NOTION STYLE MODALS --- */
+/* ========================================= */
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.notion-modal {
+  background: white;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+  animation: slideUp 0.2s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--brand-navy);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.close-btn:hover { color: #0f172a; }
+
+.modal-description {
+  font-size: 0.85rem;
+  color: var(--text-muted-light);
+  margin-bottom: 2rem;
+  line-height: 1.4;
+}
+
+.notion-form .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.notion-form label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted-dark);
+  margin-bottom: 0.4rem;
+}
+
+.notion-form input, .notion-form select {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: 0.2s;
+  box-sizing: border-box;
+}
+
+.notion-form input:focus, .notion-form select:focus {
+  border-color: var(--brand-navy);
+  box-shadow: 0 0 0 2px rgba(7, 18, 36, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-notion-secondary {
+  background: white;
+  color: var(--text-muted-dark);
+  border: 1px solid #cbd5e1;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-notion-secondary:hover {
+  background: #f8fafc;
+  color: var(--brand-navy);
 }

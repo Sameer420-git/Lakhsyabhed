@@ -1,54 +1,29 @@
-import React, { useState } from 'react';
-import { supabase } from './supabaseClient'; 
-import './App.css';
+import { Routes, Route } from 'react-router-dom';
+import './App.css'; //
+import LandingPage    from './pages/LandingPage';
+import LoginPage      from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
-import Header from './components/Header';
-import Hero from './components/Hero';
-import About from './components/About';
-import Courses from './components/Courses';
-import WhyUs from './components/WhyUs';
-import Footer from './components/Footer';
-import EnquiryModal from './components/EnquiryModal';
+import AdminDashboard  from './pages/admin/Dashboard';
+import StudentCourses  from './pages/portal/Courses';
 
 function App() {
-  const [showModal, setShowModal] = useState(false);
-
-  const handleEnquirySubmit = async (formData) => {
-    try {
-      const { error } = await supabase
-        .from('enquiries')
-        .insert([{ name: formData.name, phone: formData.phone, course: formData.course }]);
-      
-      if (error) throw error;
-      
-      // Data is secure. Close the modal instantly without interrupting the user.
-      setShowModal(false);
-      
-    } catch (error) {
-      console.error("Error submitting enquiry:", error.message);
-      // We keep the error alert just in case their internet drops, so they know it failed.
-      alert("There was an error submitting your enquiry. Please try again.");
-    }
-  };
-
   return (
-    <div className="app-container">
-      <Header setShowModal={setShowModal} />
-      <main>
-        <Hero setShowModal={setShowModal} />
-        <About /> 
-        <WhyUs />
-        <Courses setShowModal={setShowModal} /> 
-      </main>
-      <Footer />
-      
-      {showModal && (
-        <EnquiryModal 
-          setShowModal={setShowModal} 
-          handleEnquirySubmit={handleEnquirySubmit} 
-        />
-      )}
-    </div>
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/"      element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* Secure Admin Route */}
+      <Route path="/admin" element={<ProtectedRoute allowedRole="admin" />}>
+        <Route path="dashboard" element={<AdminDashboard />} />
+      </Route>
+
+      {/* Secure Student Route */}
+      <Route path="/portal" element={<ProtectedRoute allowedRole="student" />}>
+        <Route path="courses" element={<StudentCourses />} />
+      </Route>
+    </Routes>
   );
 }
 
