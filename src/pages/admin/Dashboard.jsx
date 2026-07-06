@@ -5,10 +5,10 @@ import AddStudentModal from '../../components/AddStudentModal';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('sms'); // 'sms' or 'cms'
+  const [activeTab, setActiveTab] = useState('sms'); 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile Drawer State
 
-  // Real Database State for Students
   const [students, setStudents] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
 
@@ -17,7 +17,6 @@ export default function AdminDashboard() {
     navigate('/login');
   };
 
-  // --- FETCH REAL STUDENT DATA ---
   useEffect(() => {
     async function fetchStudents() {
       setLoadingStudents(true);
@@ -38,9 +37,9 @@ export default function AdminDashboard() {
     if (activeTab === 'sms') {
       fetchStudents();
     }
-  }, [activeTab, showAddModal]); // Re-runs when the tab changes or a new student is added (modal closes)
+  }, [activeTab, showAddModal]);
 
-  // --- MOCK DATA FOR CMS (Until we build the CMS backend) ---
+  // --- MOCK DATA FOR CMS ---
   const lectures = [
     { id: '1', title: 'Kinematics Lecture 01', batch: 'JEE 2026', hosted: 'Bunny Stream', duration: '1h 45m', date: 'Oct 15, 2024' },
     { id: '2', title: 'Cell Structure & Functions', batch: 'NEET 2026', hosted: 'Bunny Stream', duration: '1h 20m', date: 'Oct 14, 2024' },
@@ -54,17 +53,46 @@ export default function AdminDashboard() {
   return (
     <div className="admin-layout">
       
-      {/* --- SIDEBAR --- */}
-      <aside className="admin-sidebar">
-        <div className="sidebar-brand">
+      {/* --- MOBILE HEADER (Visible only on small screens) --- */}
+      <div className="mobile-admin-header">
+        <div className="sidebar-brand" style={{ marginBottom: 0 }}>
           <h2>Lakhsyabhed</h2>
           <span className="brand-badge">Admin</span>
+        </div>
+        <button 
+          className="hamburger-btn" 
+          onClick={() => setIsSidebarOpen(true)}
+        >
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+      </div>
+
+      {/* --- MOBILE DARK OVERLAY --- */}
+      {isSidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
+      )}
+
+      {/* --- SIDEBAR --- */}
+      <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        
+        {/* Desktop Brand (Hidden on Mobile) */}
+        <div className="sidebar-brand desktop-only">
+          <h2>Lakhsyabhed</h2>
+          <span className="brand-badge">Admin</span>
+        </div>
+
+        {/* Mobile Sidebar Header with Close Button */}
+        <div className="sidebar-header-mobile">
+          <div className="sidebar-brand" style={{ marginBottom: 0 }}>
+            <h2>Menu</h2>
+          </div>
+          <button className="close-btn" onClick={() => setIsSidebarOpen(false)}>×</button>
         </div>
 
         <nav className="sidebar-nav">
           <button 
             className={`nav-item ${activeTab === 'sms' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sms')}
+            onClick={() => { setActiveTab('sms'); setIsSidebarOpen(false); }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             Student Management
@@ -72,7 +100,7 @@ export default function AdminDashboard() {
           
           <button 
             className={`nav-item ${activeTab === 'cms' ? 'active' : ''}`}
-            onClick={() => setActiveTab('cms')}
+            onClick={() => { setActiveTab('cms'); setIsSidebarOpen(false); }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
             Content Manager
@@ -97,10 +125,7 @@ export default function AdminDashboard() {
           
           <button 
             className="btn-notion-primary"
-            onClick={() => {
-              if (activeTab === 'sms') setShowAddModal(true);
-              // CMS upload modal logic can go here later
-            }}
+            onClick={() => { if (activeTab === 'sms') setShowAddModal(true); }}
           >
             {activeTab === 'sms' ? '+ Add New Student' : '+ Upload Content'}
           </button>
@@ -156,11 +181,9 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* --- CONTENT MANAGER VIEW (Split Sections) --- */}
+        {/* --- CONTENT MANAGER VIEW --- */}
         {activeTab === 'cms' && (
           <div className="cms-sections">
-            
-            {/* Section 1: Lectures */}
             <div className="cms-section">
               <h3 className="cms-section-title">Lecture Recordings</h3>
               <div className="notion-table-container">
@@ -178,9 +201,7 @@ export default function AdminDashboard() {
                   <tbody>
                     {lectures.map(lec => (
                       <tr key={lec.id} className="notion-row">
-                        <td className="font-medium text-dark">
-                          <span style={{marginRight: '8px'}}>▶</span> {lec.title}
-                        </td>
+                        <td className="font-medium text-dark"><span style={{marginRight: '8px'}}>▶</span> {lec.title}</td>
                         <td><span className="notion-tag gray">{lec.batch}</span></td>
                         <td className="text-muted">{lec.hosted}</td>
                         <td className="text-muted">{lec.duration}</td>
@@ -193,7 +214,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Section 2: Notes */}
             <div className="cms-section">
               <h3 className="cms-section-title">Study Materials & Notes</h3>
               <div className="notion-table-container">
@@ -210,9 +230,7 @@ export default function AdminDashboard() {
                   <tbody>
                     {notes.map(note => (
                       <tr key={note.id} className="notion-row">
-                        <td className="font-medium text-dark">
-                          <span style={{marginRight: '8px'}}>📄</span> {note.title}
-                        </td>
+                        <td className="font-medium text-dark"><span style={{marginRight: '8px'}}>📄</span> {note.title}</td>
                         <td><span className="notion-tag gray">{note.batch}</span></td>
                         <td className="text-muted">{note.size}</td>
                         <td className="text-muted">{note.date}</td>
@@ -223,20 +241,15 @@ export default function AdminDashboard() {
                 </table>
               </div>
             </div>
-
           </div>
         )}
-
       </main>
 
       {/* --- MODALS --- */}
       {showAddModal && (
         <AddStudentModal 
           onClose={() => setShowAddModal(false)}
-          onSuccess={() => {
-            setShowAddModal(false);
-            // The useEffect will automatically re-run and fetch the new student!
-          }}
+          onSuccess={() => setShowAddModal(false)}
         />
       )}
       
