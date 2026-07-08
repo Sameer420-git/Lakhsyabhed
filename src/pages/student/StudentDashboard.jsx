@@ -106,13 +106,13 @@ export default function StudentDashboard() {
         )}
 
         {/* --- CONTENT TABLES (SIDE-BY-SIDE) --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '3rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '3rem' }}>
           
           {/* LECTURE PLAYLIST */}
           <div className="cms-section" style={{ width: '100%' }}>
             <h3 className="cms-section-title">Lecture Syllabus</h3>
             <div className="notion-table-container">
-              <table className="notion-table">
+              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <tbody>
                   {lectures.length === 0 && (
                     <tr><td className="text-muted" style={{ padding: '2rem 1rem' }}>No lectures posted yet.</td></tr>
@@ -128,12 +128,30 @@ export default function StudentDashboard() {
                       }}
                       onClick={() => setActiveVideo(lec)}
                     >
-                      <td className="font-medium text-dark">
+                      <td 
+                        className="font-medium text-dark" 
+                        style={{ 
+                          whiteSpace: 'nowrap', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis',
+                          paddingRight: '1rem'
+                        }}
+                      >
                         <span style={{ marginRight: '10px', color: activeVideo?.id === lec.id ? '#0f172a' : '#94a3b8' }}>▶</span>
                         {lec.title}
                       </td>
-                      <td className="text-muted">{lec.duration !== 'Unknown' ? lec.duration : 'Video'}</td>
-                      <td className="actions" style={{ color: activeVideo?.id === lec.id ? '#0f172a' : '#94a3b8', fontWeight: activeVideo?.id === lec.id ? '600' : '400' }}>
+                      <td className="text-muted" style={{ width: '80px', whiteSpace: 'nowrap' }}>
+                        {lec.duration !== 'Unknown' ? lec.duration : 'Video'}
+                      </td>
+                      <td 
+                        className="actions" 
+                        style={{ 
+                          width: '80px', 
+                          textAlign: 'right', 
+                          color: activeVideo?.id === lec.id ? '#0f172a' : '#94a3b8', 
+                          fontWeight: activeVideo?.id === lec.id ? '600' : '400' 
+                        }}
+                      >
                         {activeVideo?.id === lec.id ? 'Playing' : 'Play'}
                       </td>
                     </tr>
@@ -147,19 +165,29 @@ export default function StudentDashboard() {
           <div className="cms-section" style={{ width: '100%' }}>
             <h3 className="cms-section-title">Study Materials & Notes</h3>
             <div className="notion-table-container">
-              <table className="notion-table">
+              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <tbody>
                   {notes.length === 0 && (
                     <tr><td className="text-muted" style={{ padding: '2rem 1rem' }}>No materials posted yet.</td></tr>
                   )}
                   {notes.map(note => (
                     <tr key={note.id} className="notion-row">
-                      <td className="font-medium text-dark">
+                      <td 
+                        className="font-medium text-dark"
+                        style={{ 
+                          whiteSpace: 'nowrap', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis',
+                          paddingRight: '1rem'
+                        }}
+                      >
                         <span style={{ marginRight: '10px', color: '#94a3b8' }}>📄</span>
                         {note.title}
                       </td>
-                      <td className="text-muted">{note.meta_info}</td>
-                      <td className="actions">
+                      <td className="text-muted" style={{ width: '80px', whiteSpace: 'nowrap' }}>
+                        {note.meta_info}
+                      </td>
+                      <td className="actions" style={{ width: '90px', textAlign: 'right' }}>
                         <a 
                           href={note.file_url} 
                           target="_blank" 
