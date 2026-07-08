@@ -5,7 +5,7 @@ import LoginPage      from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import AdminDashboard  from './pages/admin/Dashboard';
-import StudentCourses  from './pages/portal/Courses';
+
 import StudentDashboard from './pages/student/StudentDashboard'; // Check your exact folder path!
 function App() {
   return (
