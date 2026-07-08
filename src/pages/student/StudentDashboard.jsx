@@ -105,17 +105,18 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* --- CONTENT TABLES (SIDE-BY-SIDE) --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '3rem' }}>
+        {/* --- ULTRA-COMPACT CONTENT TABLES --- */}
+        {/* Dropped minmax to 300px and gap to 2rem for a tighter side-by-side fit */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
           
           {/* LECTURE PLAYLIST */}
           <div className="cms-section" style={{ width: '100%' }}>
-            <h3 className="cms-section-title">Lecture Syllabus</h3>
+            <h3 className="cms-section-title" style={{ fontSize: '1.05rem' }}>Lecture Syllabus</h3>
             <div className="notion-table-container">
               <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <tbody>
                   {lectures.length === 0 && (
-                    <tr><td className="text-muted" style={{ padding: '2rem 1rem' }}>No lectures posted yet.</td></tr>
+                    <tr><td className="text-muted" style={{ padding: '1.5rem 1rem', fontSize: '0.9rem' }}>No lectures posted yet.</td></tr>
                   )}
                   {lectures.map(lec => (
                     <tr 
@@ -134,25 +135,21 @@ export default function StudentDashboard() {
                           whiteSpace: 'nowrap', 
                           overflow: 'hidden', 
                           textOverflow: 'ellipsis',
-                          paddingRight: '1rem'
+                          paddingRight: '0.5rem',
+                          fontSize: '0.9rem'
                         }}
                       >
-                        <span style={{ marginRight: '10px', color: activeVideo?.id === lec.id ? '#0f172a' : '#94a3b8' }}>▶</span>
                         {lec.title}
                       </td>
-                      <td className="text-muted" style={{ width: '80px', whiteSpace: 'nowrap' }}>
+                      <td className="text-muted" style={{ width: '70px', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
                         {lec.duration !== 'Unknown' ? lec.duration : 'Video'}
                       </td>
-                      <td 
-                        className="actions" 
-                        style={{ 
-                          width: '80px', 
-                          textAlign: 'right', 
-                          color: activeVideo?.id === lec.id ? '#0f172a' : '#94a3b8', 
-                          fontWeight: activeVideo?.id === lec.id ? '600' : '400' 
-                        }}
-                      >
-                        {activeVideo?.id === lec.id ? 'Playing' : 'Play'}
+                      <td className="actions" style={{ width: '40px', textAlign: 'right' }}>
+                        {activeVideo?.id === lec.id ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#3b82f6' }}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                        ) : (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8' }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -163,12 +160,12 @@ export default function StudentDashboard() {
 
           {/* STUDY MATERIALS */}
           <div className="cms-section" style={{ width: '100%' }}>
-            <h3 className="cms-section-title">Study Materials & Notes</h3>
+            <h3 className="cms-section-title" style={{ fontSize: '1.05rem' }}>Study Materials & Notes</h3>
             <div className="notion-table-container">
               <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <tbody>
                   {notes.length === 0 && (
-                    <tr><td className="text-muted" style={{ padding: '2rem 1rem' }}>No materials posted yet.</td></tr>
+                    <tr><td className="text-muted" style={{ padding: '1.5rem 1rem', fontSize: '0.9rem' }}>No materials posted yet.</td></tr>
                   )}
                   {notes.map(note => (
                     <tr key={note.id} className="notion-row">
@@ -178,23 +175,28 @@ export default function StudentDashboard() {
                           whiteSpace: 'nowrap', 
                           overflow: 'hidden', 
                           textOverflow: 'ellipsis',
-                          paddingRight: '1rem'
+                          paddingRight: '0.5rem',
+                          fontSize: '0.9rem'
                         }}
                       >
-                        <span style={{ marginRight: '10px', color: '#94a3b8' }}>📄</span>
+                        <span style={{ marginRight: '8px', color: '#94a3b8' }}>📄</span>
                         {note.title}
                       </td>
-                      <td className="text-muted" style={{ width: '80px', whiteSpace: 'nowrap' }}>
+                      <td className="text-muted" style={{ width: '70px', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
                         {note.meta_info}
                       </td>
-                      <td className="actions" style={{ width: '90px', textAlign: 'right' }}>
+                      <td className="actions" style={{ width: '50px', textAlign: 'right' }}>
                         <a 
                           href={note.file_url} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          style={{ color: '#0f172a', fontWeight: 600, textDecoration: 'none', borderBottom: '1px solid #0f172a' }}
+                          style={{ color: '#0f172a', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%', transition: 'color 0.2s' }}
                         >
-                          Download
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
                         </a>
                       </td>
                     </tr>
