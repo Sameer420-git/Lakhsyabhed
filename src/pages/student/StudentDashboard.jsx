@@ -108,18 +108,20 @@ export default function StudentDashboard() {
           {/* LECTURE PLAYLIST */}
           <div className="cms-section" style={{ width: '100%' }}>
             <h3 className="cms-section-title" style={{ fontSize: '1.05rem' }}>Lecture Syllabus</h3>
-            {/* OVERRIDE OVERFLOW AND MIN-WIDTH HERE */}
-            <div className="notion-table-container" style={{ overflowX: 'hidden' }}>
-              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '100%' }}>
-                {/* STRICT COLUMN SIZING */}
+            
+            {/* FIXED: Removed notion-table-container class and forced overflow hidden */}
+            <div style={{ width: '100%', overflow: 'hidden' }}>
+              
+              {/* FIXED: minWidth: '0' obliterates the 700px rule from App.css */}
+              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '0' }}>
                 <colgroup>
-                  <col style={{ width: 'auto' }} />     {/* Title takes remaining space */}
-                  <col style={{ width: '70px' }} />     {/* Duration locked to 70px */}
-                  <col style={{ width: '40px' }} />     {/* Icon locked to 40px */}
+                  <col style={{ width: 'auto' }} />
+                  <col style={{ width: '70px' }} />
+                  <col style={{ width: '40px' }} />
                 </colgroup>
                 <tbody>
                   {lectures.length === 0 && (
-                    <tr><td colSpan="3" className="text-muted" style={{ padding: '1.5rem 1rem', fontSize: '0.9rem' }}>No lectures posted yet.</td></tr>
+                    <tr><td colSpan="3" className="text-muted" style={{ padding: '1.5rem 0', fontSize: '0.9rem' }}>No lectures posted yet.</td></tr>
                   )}
                   {lectures.map(lec => (
                     <tr 
@@ -155,18 +157,20 @@ export default function StudentDashboard() {
           {/* STUDY MATERIALS */}
           <div className="cms-section" style={{ width: '100%' }}>
             <h3 className="cms-section-title" style={{ fontSize: '1.05rem' }}>Study Materials & Notes</h3>
-            {/* OVERRIDE OVERFLOW AND MIN-WIDTH HERE */}
-            <div className="notion-table-container" style={{ overflowX: 'hidden' }}>
-              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '100%' }}>
-                {/* STRICT COLUMN SIZING */}
+            
+            {/* FIXED: Removed notion-table-container class and forced overflow hidden */}
+            <div style={{ width: '100%', overflow: 'hidden' }}>
+              
+              {/* FIXED: minWidth: '0' obliterates the 700px rule from App.css */}
+              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '0' }}>
                 <colgroup>
-                  <col style={{ width: 'auto' }} />     {/* Title takes remaining space */}
-                  <col style={{ width: '70px' }} />     {/* Size locked to 70px */}
-                  <col style={{ width: '40px' }} />     {/* Icon locked to 40px */}
+                  <col style={{ width: 'auto' }} />
+                  <col style={{ width: '70px' }} />
+                  <col style={{ width: '40px' }} />
                 </colgroup>
                 <tbody>
                   {notes.length === 0 && (
-                    <tr><td colSpan="3" className="text-muted" style={{ padding: '1.5rem 1rem', fontSize: '0.9rem' }}>No materials posted yet.</td></tr>
+                    <tr><td colSpan="3" className="text-muted" style={{ padding: '1.5rem 0', fontSize: '0.9rem' }}>No materials posted yet.</td></tr>
                   )}
                   {notes.map(note => (
                     <tr key={note.id} className="notion-row">
