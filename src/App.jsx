@@ -1,28 +1,35 @@
 import { Routes, Route } from 'react-router-dom';
-import './App.css'; //
+import './App.css'; 
 import LandingPage    from './pages/LandingPage';
 import LoginPage      from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
-import AdminDashboard  from './pages/admin/Dashboard';
+import AdminDashboard   from './pages/admin/Dashboard';
+import StudentDashboard from './pages/student/StudentDashboard'; 
 
-import StudentDashboard from './pages/student/StudentDashboard'; // Check your exact folder path!
 function App() {
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* --- Public Routes --- */}
       <Route path="/"      element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Secure Admin Route */}
+      {/* --- Secure Admin Route --- */}
+      {/* Accessible at /admin/dashboard */}
       <Route path="/admin" element={<ProtectedRoute allowedRole="admin" />}>
         <Route path="dashboard" element={<AdminDashboard />} />
       </Route>
-      <Route path="/dashboard" element={<StudentDashboard />} />
-      {/* Secure Student Route */}
-      <Route path="/portal" element={<ProtectedRoute allowedRole="student" />}>
-      <Route path="/dashboard" element={<StudentDashboard />} />
-      </Route>
+
+      {/* --- Secure Student Route --- */}
+      {/* Accessible at /dashboard */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute allowedRole="student">
+            <StudentDashboard />
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   );
 }
