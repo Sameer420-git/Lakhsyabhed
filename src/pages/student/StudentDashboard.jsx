@@ -69,7 +69,7 @@ export default function StudentDashboard() {
     <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', padding: '3rem 1.5rem', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', animation: 'slideUp 0.3s ease-out' }}>
         
-        {/* --- NOTION STYLE HEADER --- */}
+        {/* --- HEADER --- */}
         <header className="admin-header" style={{ marginBottom: '2.5rem' }}>
           <div>
             <h1 className="admin-title">Student Portal</h1>
@@ -77,10 +77,7 @@ export default function StudentDashboard() {
               Welcome back, {profile?.name} • <span className="notion-tag gray" style={{ marginLeft: '0.5rem' }}>{profile?.batch}</span>
             </p>
           </div>
-          <button 
-            className="btn-notion-secondary" 
-            onClick={handleLogout}
-          >
+          <button className="btn-notion-secondary" onClick={handleLogout}>
             Log Out
           </button>
         </header>
@@ -89,11 +86,11 @@ export default function StudentDashboard() {
         {activeVideo ? (
           <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', marginBottom: '3.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' }}>
             <div style={{ padding: '1.25rem 1.5rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 className="font-medium text-dark" style={{ margin: 0, fontSize: '1.15rem' }}>
+              <h2 className="font-medium text-dark" style={{ margin: 0, fontSize: '1.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 <span style={{ color: '#3b82f6', marginRight: '8px' }}>▶</span> 
                 {activeVideo.title}
               </h2>
-              <span className="notion-tag blue">Now Playing</span>
+              <span className="notion-tag blue" style={{ flexShrink: 0 }}>Now Playing</span>
             </div>
             <BunnyPlayer videoId={activeVideo.file_url} />
           </div>
@@ -105,18 +102,24 @@ export default function StudentDashboard() {
           </div>
         )}
 
-        {/* --- ULTRA-COMPACT CONTENT TABLES --- */}
-        {/* Dropped minmax to 300px and gap to 2rem for a tighter side-by-side fit */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+        {/* --- CONTENT TABLES (SIDE-BY-SIDE) --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2.5rem' }}>
           
           {/* LECTURE PLAYLIST */}
           <div className="cms-section" style={{ width: '100%' }}>
             <h3 className="cms-section-title" style={{ fontSize: '1.05rem' }}>Lecture Syllabus</h3>
-            <div className="notion-table-container">
-              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+            {/* OVERRIDE OVERFLOW AND MIN-WIDTH HERE */}
+            <div className="notion-table-container" style={{ overflowX: 'hidden' }}>
+              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '100%' }}>
+                {/* STRICT COLUMN SIZING */}
+                <colgroup>
+                  <col style={{ width: 'auto' }} />     {/* Title takes remaining space */}
+                  <col style={{ width: '70px' }} />     {/* Duration locked to 70px */}
+                  <col style={{ width: '40px' }} />     {/* Icon locked to 40px */}
+                </colgroup>
                 <tbody>
                   {lectures.length === 0 && (
-                    <tr><td className="text-muted" style={{ padding: '1.5rem 1rem', fontSize: '0.9rem' }}>No lectures posted yet.</td></tr>
+                    <tr><td colSpan="3" className="text-muted" style={{ padding: '1.5rem 1rem', fontSize: '0.9rem' }}>No lectures posted yet.</td></tr>
                   )}
                   {lectures.map(lec => (
                     <tr 
@@ -129,26 +132,17 @@ export default function StudentDashboard() {
                       }}
                       onClick={() => setActiveVideo(lec)}
                     >
-                      <td 
-                        className="font-medium text-dark" 
-                        style={{ 
-                          whiteSpace: 'nowrap', 
-                          overflow: 'hidden', 
-                          textOverflow: 'ellipsis',
-                          paddingRight: '0.5rem',
-                          fontSize: '0.9rem'
-                        }}
-                      >
+                      <td className="font-medium text-dark" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '0.5rem', fontSize: '0.9rem' }}>
                         {lec.title}
                       </td>
-                      <td className="text-muted" style={{ width: '70px', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                      <td className="text-muted" style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
                         {lec.duration !== 'Unknown' ? lec.duration : 'Video'}
                       </td>
-                      <td className="actions" style={{ width: '40px', textAlign: 'right' }}>
+                      <td className="actions" style={{ textAlign: 'right', paddingRight: '0.5rem' }}>
                         {activeVideo?.id === lec.id ? (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#3b82f6' }}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#3b82f6', verticalAlign: 'middle' }}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                         ) : (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8' }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8', verticalAlign: 'middle' }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                         )}
                       </td>
                     </tr>
@@ -161,38 +155,31 @@ export default function StudentDashboard() {
           {/* STUDY MATERIALS */}
           <div className="cms-section" style={{ width: '100%' }}>
             <h3 className="cms-section-title" style={{ fontSize: '1.05rem' }}>Study Materials & Notes</h3>
-            <div className="notion-table-container">
-              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+            {/* OVERRIDE OVERFLOW AND MIN-WIDTH HERE */}
+            <div className="notion-table-container" style={{ overflowX: 'hidden' }}>
+              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '100%' }}>
+                {/* STRICT COLUMN SIZING */}
+                <colgroup>
+                  <col style={{ width: 'auto' }} />     {/* Title takes remaining space */}
+                  <col style={{ width: '70px' }} />     {/* Size locked to 70px */}
+                  <col style={{ width: '40px' }} />     {/* Icon locked to 40px */}
+                </colgroup>
                 <tbody>
                   {notes.length === 0 && (
-                    <tr><td className="text-muted" style={{ padding: '1.5rem 1rem', fontSize: '0.9rem' }}>No materials posted yet.</td></tr>
+                    <tr><td colSpan="3" className="text-muted" style={{ padding: '1.5rem 1rem', fontSize: '0.9rem' }}>No materials posted yet.</td></tr>
                   )}
                   {notes.map(note => (
                     <tr key={note.id} className="notion-row">
-                      <td 
-                        className="font-medium text-dark"
-                        style={{ 
-                          whiteSpace: 'nowrap', 
-                          overflow: 'hidden', 
-                          textOverflow: 'ellipsis',
-                          paddingRight: '0.5rem',
-                          fontSize: '0.9rem'
-                        }}
-                      >
-                        <span style={{ marginRight: '8px', color: '#94a3b8' }}>📄</span>
+                      <td className="font-medium text-dark" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '0.5rem', fontSize: '0.9rem' }}>
+                        <span style={{ marginRight: '6px', color: '#94a3b8' }}>📄</span>
                         {note.title}
                       </td>
-                      <td className="text-muted" style={{ width: '70px', whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                      <td className="text-muted" style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
                         {note.meta_info}
                       </td>
-                      <td className="actions" style={{ width: '50px', textAlign: 'right' }}>
-                        <a 
-                          href={note.file_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          style={{ color: '#0f172a', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', width: '100%', transition: 'color 0.2s' }}
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <td className="actions" style={{ textAlign: 'right', paddingRight: '0.5rem' }}>
+                        <a href={note.file_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', lineHeight: 0 }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'stroke 0.2s', verticalAlign: 'middle' }}>
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
