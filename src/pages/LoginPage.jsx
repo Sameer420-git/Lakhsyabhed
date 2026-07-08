@@ -38,7 +38,7 @@ export default function LoginPage() {
     if (profile?.role === 'admin') {
       navigate('/admin/dashboard');
     } else if (profile?.role === 'student') {
-      navigate('/portal/courses');
+      navigate('/student/StudentDashboard');
     } else {
       await supabase.auth.signOut();
       setError('Account not configured. Contact the institute.');
