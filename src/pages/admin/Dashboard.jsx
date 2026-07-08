@@ -2,21 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import AddStudentModal from '../../components/AddStudentModal';
+import AddContentModal from '../../components/AddContentModal';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  
+  // activeTab can now be: 'sms', 'cms-notes', or 'cms-lectures'
   const [activeTab, setActiveTab] = useState('sms'); 
   const [showAddModal, setShowAddModal] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile Drawer State
+  const [showContentModal, setShowContentModal] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  const [refreshTrigger, setRefreshTrigger] = useState(0); 
 
+  // --- DATA STATES ---
   const [students, setStudents] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
+  
+  const [content, setContent] = useState([]);
+  const [loadingContent, setLoadingContent] = useState(true);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
   };
 
+  // --- OPTIMIZED DATA FETCHING ---
   useEffect(() => {
     async function fetchStudents() {
       setLoadingStudents(true);
@@ -26,34 +37,37 @@ export default function AdminDashboard() {
         .eq('role', 'student')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching students:", error.message);
-      } else {
-        setStudents(data || []);
-      }
+      if (!error && data) setStudents(data);
       setLoadingStudents(false);
     }
 
-    if (activeTab === 'sms') {
-      fetchStudents();
+    async function fetchCourseContent() {
+      setLoadingContent(true);
+      const { data, error } = await supabase
+        .from('course_content')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) setContent(data);
+      setLoadingContent(false);
     }
-  }, [activeTab, showAddModal]);
 
-  // --- MOCK DATA FOR CMS ---
-  const lectures = [
-    { id: '1', title: 'Kinematics Lecture 01', batch: 'JEE 2026', hosted: 'Bunny Stream', duration: '1h 45m', date: 'Oct 15, 2024' },
-    { id: '2', title: 'Cell Structure & Functions', batch: 'NEET 2026', hosted: 'Bunny Stream', duration: '1h 20m', date: 'Oct 14, 2024' },
-  ];
+    // Smart fetching based on the new activeTab naming convention
+    if (activeTab === 'sms' && students.length === 0) {
+      fetchStudents();
+    } else if (activeTab.startsWith('cms') && content.length === 0) {
+      fetchCourseContent();
+    }
+  }, [activeTab, refreshTrigger]); 
 
-  const notes = [
-    { id: '1', title: 'Thermodynamics DPP', batch: 'JEE 2026', size: '2.4 MB', date: 'Oct 10, 2024' },
-    { id: '2', title: 'Biology Chapter 1 Summary', batch: 'NEET 2026', size: '1.1 MB', date: 'Oct 14, 2024' },
-  ];
+  // --- CONTENT SPLITTING ---
+  const lectures = content.filter(item => item.content_type === 'lecture');
+  const notes = content.filter(item => item.content_type === 'note');
 
   return (
     <div className="admin-layout">
       
-      {/* --- MOBILE HEADER (Visible only on small screens) --- */}
+      {/* --- MOBILE HEADER --- */}
       <div className="mobile-admin-header">
         <div className="sidebar-brand" style={{ marginBottom: 0 }}>
           <h2>Lakhsyabhed</h2>
@@ -72,16 +86,13 @@ export default function AdminDashboard() {
         <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
       )}
 
-      {/* --- SIDEBAR --- */}
+      {/* --- SIDEBAR DIRECTORY STRUCTURE --- */}
       <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-        
-        {/* Desktop Brand (Hidden on Mobile) */}
         <div className="sidebar-brand desktop-only">
           <h2>Lakhsyabhed</h2>
           <span className="brand-badge">Admin</span>
         </div>
 
-        {/* Mobile Sidebar Header with Close Button */}
         <div className="sidebar-header-mobile">
           <div className="sidebar-brand" style={{ marginBottom: 0 }}>
             <h2>Menu</h2>
@@ -98,16 +109,30 @@ export default function AdminDashboard() {
             Student Management
           </button>
           
-          <button 
-            className={`nav-item ${activeTab === 'cms' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('cms'); setIsSidebarOpen(false); }}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
+          {/* Directory Parent Label */}
+          <div style={{ padding: '1rem 0.75rem 0.5rem', color: '#94a3b8', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Content Manager
+          </div>
+
+          {/* Indented Directory Children */}
+          <button 
+            className={`nav-item ${activeTab === 'cms-notes' ? 'active' : ''}`}
+            style={{ paddingLeft: '2rem' }}
+            onClick={() => { setActiveTab('cms-notes'); setIsSidebarOpen(false); }}
+          >
+            📄 Study Materials
+          </button>
+
+          <button 
+            className={`nav-item ${activeTab === 'cms-lectures' ? 'active' : ''}`}
+            style={{ paddingLeft: '2rem' }}
+            onClick={() => { setActiveTab('cms-lectures'); setIsSidebarOpen(false); }}
+          >
+            ▶ Video Lectures
           </button>
         </nav>
 
-        <button className="nav-item logout-btn" onClick={handleLogout}>
+        <button className="nav-item logout-btn" style={{ marginTop: 'auto' }} onClick={handleLogout}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
           Log Out
         </button>
@@ -117,23 +142,35 @@ export default function AdminDashboard() {
       <main className="admin-main">
         <header className="admin-header">
           <div>
-            <h1 className="admin-title">{activeTab === 'sms' ? 'Students' : 'Course Content'}</h1>
+            {/* Dynamic Titles based on the active directory */}
+            <h1 className="admin-title">
+              {activeTab === 'sms' ? 'Students' : 
+               activeTab === 'cms-notes' ? 'Study Materials & Notes' : 
+               'Lecture Recordings'}
+            </h1>
             <p className="admin-subtitle">
-              {activeTab === 'sms' ? 'Manage access and accounts for enrolled students.' : 'Upload and organize lecture videos and study materials.'}
+              {activeTab === 'sms' ? 'Manage access and accounts for enrolled students.' : 
+               activeTab === 'cms-notes' ? 'Upload and organize PDF notes, worksheets, and DPPs.' :
+               'Organize video lecture links for student streaming.'}
             </p>
           </div>
           
           <button 
             className="btn-notion-primary"
-            onClick={() => { if (activeTab === 'sms') setShowAddModal(true); }}
+            onClick={() => { 
+              if (activeTab === 'sms') setShowAddModal(true); 
+              if (activeTab.startsWith('cms')) setShowContentModal(true); 
+            }}
           >
-            {activeTab === 'sms' ? '+ Add New Student' : '+ Upload Content'}
+            {activeTab === 'sms' ? '+ Add New Student' : 
+             activeTab === 'cms-notes' ? '+ Upload PDF Note' : 
+             '+ Add Video Lecture'}
           </button>
         </header>
 
         {/* --- STUDENT MANAGEMENT VIEW --- */}
         {activeTab === 'sms' && (
-          <div className="notion-table-container">
+          <div className="notion-table-container animate-fade-in">
             <table className="notion-table">
               <thead>
                 <tr>
@@ -147,17 +184,9 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {loadingStudents ? (
-                  <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                      Loading students...
-                    </td>
-                  </tr>
+                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading students...</td></tr>
                 ) : students.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                      No students found. Click "+ Add New Student" to enroll someone.
-                    </td>
-                  </tr>
+                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>No students found. Click "+ Add New Student" to enroll someone.</td></tr>
                 ) : (
                   students.map(student => (
                     <tr key={student.id} className="notion-row">
@@ -181,75 +210,99 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* --- CONTENT MANAGER VIEW --- */}
-        {activeTab === 'cms' && (
-          <div className="cms-sections">
-            <div className="cms-section">
-              <h3 className="cms-section-title">Lecture Recordings</h3>
-              <div className="notion-table-container">
-                <table className="notion-table">
-                  <thead>
-                    <tr>
-                      <th>Lecture Title</th>
-                      <th>Target Batch</th>
-                      <th>Hosted On</th>
-                      <th>Duration</th>
-                      <th>Date</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lectures.map(lec => (
-                      <tr key={lec.id} className="notion-row">
-                        <td className="font-medium text-dark"><span style={{marginRight: '8px'}}>▶</span> {lec.title}</td>
-                        <td><span className="notion-tag gray">{lec.batch}</span></td>
-                        <td className="text-muted">{lec.hosted}</td>
-                        <td className="text-muted">{lec.duration}</td>
-                        <td className="text-muted">{lec.date}</td>
-                        <td className="actions">•••</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="cms-section">
-              <h3 className="cms-section-title">Study Materials & Notes</h3>
-              <div className="notion-table-container">
-                <table className="notion-table">
-                  <thead>
-                    <tr>
-                      <th>Document Name</th>
-                      <th>Target Batch</th>
-                      <th>File Size</th>
-                      <th>Uploaded</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {notes.map(note => (
-                      <tr key={note.id} className="notion-row">
-                        <td className="font-medium text-dark"><span style={{marginRight: '8px'}}>📄</span> {note.title}</td>
-                        <td><span className="notion-tag gray">{note.batch}</span></td>
-                        <td className="text-muted">{note.size}</td>
-                        <td className="text-muted">{note.date}</td>
-                        <td className="actions">•••</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        {/* --- NOTES DIRECTORY VIEW --- */}
+        {activeTab === 'cms-notes' && (
+          <div className="notion-table-container animate-fade-in">
+            <table className="notion-table">
+              <thead>
+                <tr>
+                  <th>Document Name</th>
+                  <th>Target Batch</th>
+                  <th>File Size</th>
+                  <th>Uploaded</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingContent ? (
+                  <tr><td colSpan="5" style={{textAlign: 'center', padding: '2rem', color: '#64748b'}}>Loading notes...</td></tr>
+                ) : notes.length === 0 ? (
+                  <tr><td colSpan="5" style={{textAlign: 'center', padding: '2rem', color: '#64748b'}}>No notes uploaded yet. Click "+ Upload PDF Note" to begin.</td></tr>
+                ) : notes.map(note => (
+                  <tr key={note.id} className="notion-row">
+                    <td className="font-medium text-dark"><span style={{marginRight: '8px'}}>📄</span> {note.title}</td>
+                    <td><span className="notion-tag gray">{note.batch}</span></td>
+                    <td className="text-muted">{note.meta_info}</td>
+                    <td className="text-muted">
+                      {new Date(note.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                    </td>
+                    <td className="actions">•••</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
+
+        {/* --- LECTURES DIRECTORY VIEW --- */}
+        {activeTab === 'cms-lectures' && (
+          <div className="notion-table-container animate-fade-in">
+            <table className="notion-table">
+              <thead>
+                <tr>
+                  <th>Lecture Title</th>
+                  <th>Target Batch</th>
+                  <th>Hosted On</th>
+                  <th>Duration</th>
+                  <th>Date</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingContent ? (
+                  <tr><td colSpan="6" style={{textAlign: 'center', padding: '2rem', color: '#64748b'}}>Loading lectures...</td></tr>
+                ) : lectures.length === 0 ? (
+                  <tr><td colSpan="6" style={{textAlign: 'center', padding: '2rem', color: '#64748b'}}>No lectures uploaded yet. Click "+ Add Video Lecture" to begin.</td></tr>
+                ) : lectures.map(lec => (
+                  <tr key={lec.id} className="notion-row">
+                    <td className="font-medium text-dark"><span style={{marginRight: '8px'}}>▶</span> {lec.title}</td>
+                    <td><span className="notion-tag gray">{lec.batch}</span></td>
+                    <td className="text-muted">{lec.meta_info}</td>
+                    <td className="text-muted">{lec.duration}</td>
+                    <td className="text-muted">
+                      {new Date(lec.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                    </td>
+                    <td className="actions">•••</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
       </main>
 
       {/* --- MODALS --- */}
       {showAddModal && (
         <AddStudentModal 
           onClose={() => setShowAddModal(false)}
-          onSuccess={() => setShowAddModal(false)}
+          onSuccess={() => {
+            setShowAddModal(false);
+            setStudents([]); 
+            setRefreshTrigger(prev => prev + 1); 
+          }}
+        />
+      )}
+      
+{showContentModal && (
+        <AddContentModal 
+          type={activeTab === 'cms-notes' ? 'note' : 'lecture'} // <-- This is the magic link!
+          onClose={() => setShowContentModal(false)}
+          onSuccess={() => {
+            setShowContentModal(false);
+            setContent([]); 
+            setRefreshTrigger(prev => prev + 1); 
+          }}
         />
       )}
       

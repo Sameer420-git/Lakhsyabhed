@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import AdminDashboard  from './pages/admin/Dashboard';
 import StudentCourses  from './pages/portal/Courses';
+import StudentDashboard from './pages/student/StudentDashboard';
 
 function App() {
   return (
@@ -18,7 +19,7 @@ function App() {
       <Route path="/admin" element={<ProtectedRoute allowedRole="admin" />}>
         <Route path="dashboard" element={<AdminDashboard />} />
       </Route>
-
+      <Route path="/dashboard" element={<StudentDashboard />} />
       {/* Secure Student Route */}
       <Route path="/portal" element={<ProtectedRoute allowedRole="student" />}>
         <Route path="courses" element={<StudentCourses />} />
