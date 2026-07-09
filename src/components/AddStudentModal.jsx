@@ -1,117 +1,156 @@
 import React, { useState } from 'react';
 
 export default function AddStudentModal({ onClose, onSuccess }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    batch: 'NEET 2026'
-  });
+  // Original Fields
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [batchName, setBatchName] = useState('JEE 2026');
+  
+  // New Extended Fields
+  const [dob, setDob] = useState('');
+  const [contactNo, setContactNo] = useState('');
+  const [fatherName, setFatherName] = useState('');
+  const [fatherContact, setFatherContact] = useState('');
+  const [address, setAddress] = useState('');
+
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMsg('');
-    
+    setError('');
+
     try {
-      // 1. Send the data to your new secure Vercel backend
       const response = await fetch('/api/create-student', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+          name: fullName,
+          batch: batchName,
+          dob,
+          contact_no: contactNo,
+          father_name: fatherName,
+          father_contact: fatherContact,
+          address
+        })
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
-      // 2. Handle any errors from the backend
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create student account.');
+        throw new Error(result.error || 'Failed to create student');
       }
 
-      // 3. Success! Close the modal.
-      setLoading(false);
       onSuccess(); 
-
-    } catch (error) {
-      console.error("API Error:", error);
-      setErrorMsg(error.message);
+    } catch (err) {
+      setError(err.message);
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-card notion-modal">
+    <div className="modal-backdrop" style={{ padding: '1rem', boxSizing: 'border-box' }}>
+      <div 
+        className="notion-modal" 
+        style={{ 
+          width: '100%', 
+          maxWidth: '650px', 
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          borderRadius: '6px',
+          padding: '2rem',
+          boxSizing: 'border-box'
+        }}
+      >
         <div className="modal-header">
           <h2>Add New Student</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <button type="button" className="close-btn" onClick={onClose}>×</button>
         </div>
-        
         <p className="modal-description">
-          Create a secure account for a new enrollment. They will use these credentials to access the portal.
+          Create a secure account and profile for a new enrollment.
         </p>
 
-        <form onSubmit={handleSubmit} className="notion-form">
-          <div className="form-group">
-            <label>Full Name</label>
-            <input 
-              type="text" 
-              required
-              placeholder="e.g. Rahul Sharma"
-              value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-            />
+        {error && (
+          <div style={{ background: '#fef2f2', color: '#991b1b', padding: '0.75rem', borderRadius: '6px', marginBottom: '1.5rem', fontSize: '0.85rem', border: '1px solid #fecaca' }}>
+            {error}
+          </div>
+        )}
+
+        <form className="notion-form" onSubmit={handleSubmit}>
+          
+          <h3 style={{ fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Account Credentials</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Full Name</label>
+              <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} style={{ boxSizing: 'border-box', width: '100%' }} />
+            </div>
+            <div className="form-group">
+              <label>Email Address</label>
+              <input type="email" required value={email} onChange={e => setEmail(e.target.value)} style={{ boxSizing: 'border-box', width: '100%' }} />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input type="password" required value={password} onChange={e => setPassword(e.target.value)} style={{ boxSizing: 'border-box', width: '100%' }} />
+            </div>
+            <div className="form-group">
+              <label>Target Batch</label>
+              <select value={batchName} onChange={e => setBatchName(e.target.value)} style={{ boxSizing: 'border-box', width: '100%' }}>
+                <option value="JEE 2026">JEE 2026</option>
+                <option value="NEET 2026">NEET 2026</option>
+                <option value="MHT-CET 2026">MHT-CET 2026</option>
+              </select>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Email Address</label>
-            <input 
-              type="email" 
-              required
-              placeholder="student@example.com"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-            />
+          <h3 style={{ fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem', marginTop: '1rem' }}>Personal Details</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label>Date of Birth</label>
+              <input type="date" value={dob} onChange={e => setDob(e.target.value)} style={{ boxSizing: 'border-box', width: '100%' }} />
+            </div>
+            <div className="form-group">
+              <label>Student Contact No.</label>
+              <input 
+                type="tel" 
+                placeholder="+91..." 
+                value={contactNo} 
+                // Regex strips out anything that isn't a number (0-9) or a plus sign (+)
+                onChange={e => setContactNo(e.target.value.replace(/[^0-9+]/g, ''))} 
+                style={{ boxSizing: 'border-box', width: '100%' }} 
+              />
+            </div>
+            <div className="form-group">
+              <label>Father's Name</label>
+              <input type="text" value={fatherName} onChange={e => setFatherName(e.target.value)} style={{ boxSizing: 'border-box', width: '100%' }} />
+            </div>
+            <div className="form-group">
+              <label>Father's Contact</label>
+              <input 
+                type="tel" 
+                placeholder="+91..." 
+                value={fatherContact} 
+                // Regex strips out anything that isn't a number (0-9) or a plus sign (+)
+                onChange={e => setFatherContact(e.target.value.replace(/[^0-9+]/g, ''))} 
+                style={{ boxSizing: 'border-box', width: '100%' }} 
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Temporary Password</label>
-            <input 
-              type="password" 
-              required
-              placeholder="Must be at least 6 characters"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
+          <div className="form-group" style={{ marginTop: '0.5rem' }}>
+            <label>Home Address</label>
+            <input type="text" placeholder="Full residential address..." value={address} onChange={e => setAddress(e.target.value)} style={{ boxSizing: 'border-box', width: '100%' }} />
           </div>
 
-          <div className="form-group">
-            <label>Target Batch</label>
-            <select 
-              value={formData.batch}
-              onChange={(e) => setFormData({...formData, batch: e.target.value})}
-            >
-              <option value="NEET 2026">NEET 2026</option>
-              <option value="JEE 2026">JEE 2026</option>
-              <option value="MHT-CET 2025">MHT-CET 2025</option>
-              <option value="HSC Board">HSC Board</option>
-            </select>
-          </div>
-
-          {errorMsg && (
-            <p style={{ color: '#dc2626', fontSize: '0.85rem', marginBottom: '1rem', background: '#fef2f2', padding: '0.75rem', borderRadius: '6px' }}>
-              {errorMsg}
-            </p>
-          )}
-
-          <div className="modal-actions">
-            <button type="button" className="btn-notion-secondary" onClick={onClose}>
-              Cancel
-            </button>
+          <div className="modal-actions" style={{ marginTop: '1.5rem', position: 'sticky', bottom: '-2rem', background: 'white', paddingBottom: '2rem' }}>
+            <button type="button" className="btn-notion-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-notion-primary" disabled={loading}>
               {loading ? 'Creating...' : 'Create Account'}
             </button>
