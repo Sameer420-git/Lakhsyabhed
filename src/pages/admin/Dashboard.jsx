@@ -12,16 +12,29 @@ export default function AdminDashboard() {
   const [showContentModal, setShowContentModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
+  // Action States
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [viewStudent, setViewStudent] = useState(null); 
-  const [editStudent, setEditStudent] = useState(null); // Triggers Edit Modal
-  
+  const [editStudent, setEditStudent] = useState(null); 
   const [refreshTrigger, setRefreshTrigger] = useState(0); 
 
+  // --- NEW: CUSTOM UI STATES ---
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
+  const [passwordPrompt, setPasswordPrompt] = useState(null); // Holds student for password reset
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // Holds item to delete (student or content)
+
+  // Data States
   const [students, setStudents] = useState([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [content, setContent] = useState([]);
   const [loadingContent, setLoadingContent] = useState(true);
+
+  // Helper function to trigger elegant Toast messages
+  const showToast = (message, type = 'success') => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast({ visible: false, message: '', type: 'success' }), 3000);
+  };
 
   useEffect(() => {
     const handleClickOutside = () => setActiveDropdown(null);
@@ -51,50 +64,63 @@ export default function AdminDashboard() {
     else fetchCourseContent();
   }, [activeTab, refreshTrigger]); 
 
-  // --- NEW ACTIONS HITTING THE SECURE BACKEND ---
+  // --- UPDATED ACTION HANDLERS (NO ALERTS) ---
   const handleStatusToggle = async (student) => {
     const newStatus = student.status === 'Suspended' ? 'Active' : 'Suspended';
     try {
-      await fetch('/api/manage-student', {
+      const response = await fetch('/api/manage-student', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid: student.id, action: 'update_status', status: newStatus })
       });
+      if (!response.ok) throw new Error();
+      showToast(`${student.name}'s account is now ${newStatus}.`, 'success');
       setRefreshTrigger(prev => prev + 1);
-    } catch (err) { alert("Error changing status."); }
+    } catch (err) { 
+      showToast("Error changing account status.", 'error'); 
+    }
   };
 
-  const handlePasswordReset = async (student) => {
-    const newPass = window.prompt(`Enter a new temporary password for ${student.name}:`);
-    if (!newPass) return;
-    
+  // Triggered by the Custom Password Modal
+  const executePasswordReset = async () => {
+    if (!newPasswordInput || newPasswordInput.length < 6) {
+      return showToast("Password must be at least 6 characters.", 'error');
+    }
     try {
-      await fetch('/api/manage-student', {
+      const response = await fetch('/api/manage-student', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: student.id, action: 'reset_password', newPassword: newPass })
+        body: JSON.stringify({ uid: passwordPrompt.id, action: 'reset_password', newPassword: newPasswordInput })
       });
-      alert(`Password successfully changed to: ${newPass}`);
+      if (!response.ok) throw new Error();
+      
+      showToast(`Password successfully updated for ${passwordPrompt.name}.`, 'success');
+      setPasswordPrompt(null);
+      setNewPasswordInput('');
       setRefreshTrigger(prev => prev + 1);
-    } catch (err) { alert("Error resetting password."); }
+    } catch (err) { 
+      showToast("Error resetting password.", 'error'); 
+    }
   };
 
-  const handleDeleteStudent = async (student) => {
-    if (!window.confirm(`WARNING: Are you sure you want to completely delete ${student.name}'s account?`)) return;
+  // Triggered by the Custom Delete Modal
+  const executeDelete = async () => {
     try {
-      await fetch('/api/manage-student', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: student.id })
-      });
+      if (deleteConfirm.type === 'student') {
+        await fetch('/api/manage-student', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ uid: deleteConfirm.id })
+        });
+      } else {
+        await supabase.from('course_content').delete().eq('id', deleteConfirm.id);
+      }
+      showToast(`${deleteConfirm.title || deleteConfirm.name} successfully deleted.`, 'success');
+      setDeleteConfirm(null);
       setRefreshTrigger(prev => prev + 1);
-    } catch (err) { alert("Error deleting student."); }
-  };
-
-  const handleDeleteContent = async (id, title) => {
-    if (!window.confirm(`Delete "${title}"?`)) return;
-    await supabase.from('course_content').delete().eq('id', id);
-    setRefreshTrigger(prev => prev + 1);
+    } catch (err) { 
+      showToast("An error occurred during deletion.", 'error'); 
+    }
   };
 
   const lectures = content.filter(item => item.content_type === 'lecture');
@@ -102,14 +128,13 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-layout">
+      
       {/* MOBILE HEADER & SIDEBAR */}
       <div className="mobile-admin-header">
         <div className="sidebar-brand" style={{ marginBottom: 0 }}><h2>Lakhsyabhed</h2><span className="brand-badge">Admin</span></div>
         <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
       </div>
-
       {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
-
       <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand desktop-only"><h2>Lakhsyabhed</h2><span className="brand-badge">Admin</span></div>
         <nav className="sidebar-nav">
@@ -153,17 +178,16 @@ export default function AdminDashboard() {
                     <td style={{ position: 'relative' }}>
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: '0.5rem', color: '#64748b' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === student.id ? null : student.id); }}>•••</button>
                       
-                      {/* FIXED DROPDOWN WITH NEW ACTIONS */}
                       {activeDropdown === student.id && (
                         <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 10, minWidth: '160px', overflow: 'hidden' }}>
                           <button style={dropdownBtnStyle} onClick={() => setViewStudent(student)}>👁️ View Profile</button>
                           <button style={dropdownBtnStyle} onClick={() => setEditStudent(student)}>✏️ Edit Fields</button>
-                          <button style={dropdownBtnStyle} onClick={() => handlePasswordReset(student)}>🔑 Set Password</button>
+                          <button style={dropdownBtnStyle} onClick={() => { setPasswordPrompt(student); setActiveDropdown(null); }}>🔑 Set Password</button>
                           <div style={{ height: '1px', background: '#f1f5f9' }}></div>
-                          <button style={{...dropdownBtnStyle, color: student.status === 'Suspended' ? '#166534' : '#991b1b'}} onClick={() => handleStatusToggle(student)}>
+                          <button style={{...dropdownBtnStyle, color: student.status === 'Suspended' ? '#166534' : '#991b1b'}} onClick={() => { handleStatusToggle(student); setActiveDropdown(null); }}>
                             {student.status === 'Suspended' ? '🟢 Activate Account' : '🔴 Suspend Account'}
                           </button>
-                          <button style={{...dropdownBtnStyle, color: '#991b1b', fontWeight: 'bold'}} onClick={() => handleDeleteStudent(student)}>🗑️ Delete Account</button>
+                          <button style={{...dropdownBtnStyle, color: '#991b1b', fontWeight: 'bold'}} onClick={() => { setDeleteConfirm({ ...student, type: 'student' }); setActiveDropdown(null); }}>🗑️ Delete Account</button>
                         </div>
                       )}
                     </td>
@@ -174,7 +198,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* CMS Tables (Same as before) */}
+        {/* CMS Tables */}
         {activeTab === 'cms-notes' && (
           <div className="notion-table-container animate-fade-in">
             <table className="notion-table">
@@ -189,7 +213,7 @@ export default function AdminDashboard() {
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === note.id ? null : note.id); }}>•••</button>
                       {activeDropdown === note.id && (
                         <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 10, minWidth: '120px' }}>
-                          <button style={{...dropdownBtnStyle, color: '#991b1b'}} onClick={() => handleDeleteContent(note.id, note.title)}>🗑️ Delete</button>
+                          <button style={{...dropdownBtnStyle, color: '#991b1b'}} onClick={() => { setDeleteConfirm({ ...note, type: 'content' }); setActiveDropdown(null); }}>🗑️ Delete</button>
                         </div>
                       )}
                     </td>
@@ -214,7 +238,7 @@ export default function AdminDashboard() {
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === lec.id ? null : lec.id); }}>•••</button>
                       {activeDropdown === lec.id && (
                         <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', zIndex: 10, minWidth: '120px' }}>
-                          <button style={{...dropdownBtnStyle, color: '#991b1b'}} onClick={() => handleDeleteContent(lec.id, lec.title)}>🗑️ Delete</button>
+                          <button style={{...dropdownBtnStyle, color: '#991b1b'}} onClick={() => { setDeleteConfirm({ ...lec, type: 'content' }); setActiveDropdown(null); }}>🗑️ Delete</button>
                         </div>
                       )}
                     </td>
@@ -226,12 +250,12 @@ export default function AdminDashboard() {
         )}
       </main>
 
-      {/* MODALS */}
-      {showAddModal && <AddStudentModal onClose={() => setShowAddModal(false)} onSuccess={() => { setShowAddModal(false); setRefreshTrigger(prev => prev + 1); }} />}
-      {editStudent && <AddStudentModal initialData={editStudent} onClose={() => setEditStudent(null)} onSuccess={() => { setEditStudent(null); setRefreshTrigger(prev => prev + 1); }} />}
-      {showContentModal && <AddContentModal type={activeTab === 'cms-notes' ? 'note' : 'lecture'} onClose={() => setShowContentModal(false)} onSuccess={() => { setShowContentModal(false); setRefreshTrigger(prev => prev + 1); }} />}
+      {/* --- FORM MODALS --- */}
+      {showAddModal && <AddStudentModal onClose={() => setShowAddModal(false)} onSuccess={() => { setShowAddModal(false); setRefreshTrigger(prev => prev + 1); showToast("Student created successfully!"); }} />}
+      {editStudent && <AddStudentModal initialData={editStudent} onClose={() => setEditStudent(null)} onSuccess={() => { setEditStudent(null); setRefreshTrigger(prev => prev + 1); showToast("Profile updated successfully!"); }} />}
+      {showContentModal && <AddContentModal type={activeTab === 'cms-notes' ? 'note' : 'lecture'} onClose={() => setShowContentModal(false)} onSuccess={() => { setShowContentModal(false); setRefreshTrigger(prev => prev + 1); showToast("Content added successfully!"); }} />}
       
-      {/* STUDENT VIEW MODAL (Now includes Password) */}
+      {/* --- STUDENT PROFILE VIEW MODAL --- */}
       {viewStudent && (
         <div className="modal-backdrop" onClick={() => setViewStudent(null)}>
           <div className="notion-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', padding: '3rem' }}>
@@ -267,6 +291,69 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* --- CUSTOM ACTION MODALS --- */}
+      
+      {/* 1. Set Password Modal */}
+      {passwordPrompt && (
+        <div className="modal-backdrop">
+          <div className="notion-modal" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h2>Reset Password</h2>
+              <button className="close-btn" onClick={() => setPasswordPrompt(null)}>×</button>
+            </div>
+            <p className="modal-description">Enter a new secure password for <strong>{passwordPrompt.name}</strong>.</p>
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <input type="text" placeholder="New Password..." value={newPasswordInput} onChange={e => setNewPasswordInput(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+            </div>
+            <div className="modal-actions" style={{ marginTop: '0' }}>
+              <button className="btn-notion-secondary" onClick={() => { setPasswordPrompt(null); setNewPasswordInput(''); }}>Cancel</button>
+              <button className="btn-notion-primary" onClick={executePasswordReset}>Save Password</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Danger Delete Modal */}
+      {deleteConfirm && (
+        <div className="modal-backdrop">
+          <div className="notion-modal" style={{ maxWidth: '400px', borderTop: '4px solid #ef4444' }}>
+            <h2 style={{ fontSize: '1.25rem', color: '#0f172a', marginBottom: '0.5rem' }}>Are you absolutely sure?</h2>
+            <p className="modal-description">
+              You are about to permanently delete <strong>{deleteConfirm.name || deleteConfirm.title}</strong>. This action cannot be undone and will erase all associated data.
+            </p>
+            <div className="modal-actions">
+              <button className="btn-notion-secondary" onClick={() => setDeleteConfirm(null)}>Cancel</button>
+              <button style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }} onClick={executeDelete}>Yes, Delete It</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- THE TOAST NOTIFICATION --- */}
+      {toast.visible && (
+        <div style={{
+          position: 'fixed',
+          bottom: '2rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: toast.type === 'success' ? '#0f172a' : '#ef4444',
+          color: 'white',
+          padding: '0.8rem 1.5rem',
+          borderRadius: '30px',
+          fontWeight: '500',
+          fontSize: '0.9rem',
+          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          animation: 'slideUp 0.3s ease-out'
+        }}>
+          {toast.type === 'success' ? '✅' : '⚠️'} {toast.message}
+        </div>
+      )}
+
     </div>
   );
 }
