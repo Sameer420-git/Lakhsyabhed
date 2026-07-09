@@ -1,146 +1,200 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
+import BunnyPlayer from '../../components/BunnyPlayer';
 
-// initialData will be 'null' for new students, and hold student data for edits
-export default function AddStudentModal({ onClose, onSuccess, initialData = null }) {
-  const isEditMode = !!initialData;
-
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [batchName, setBatchName] = useState('JEE 2026');
+export default function StudentDashboard() {
+  const navigate = useNavigate();
   
-  const [dob, setDob] = useState('');
-  const [contactNo, setContactNo] = useState('');
-  const [fatherName, setFatherName] = useState('');
-  const [fatherContact, setFatherContact] = useState('');
-  const [address, setAddress] = useState('');
+  const [profile, setProfile] = useState(null);
+  const [content, setContent] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [activeVideo, setActiveVideo] = useState(null);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  // If in edit mode, pre-fill all the fields!
   useEffect(() => {
-    if (isEditMode) {
-      setFullName(initialData.name || '');
-      setBatchName(initialData.batch || 'JEE 2026');
-      setDob(initialData.dob || '');
-      setContactNo(initialData.contact_no || '');
-      setFatherName(initialData.father_name || '');
-      setFatherContact(initialData.father_contact || '');
-      setAddress(initialData.address || '');
-    }
-  }, [initialData, isEditMode]);
+    async function loadStudentData() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return navigate('/login');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-    try {
-      let response;
+        if (profileError) throw profileError;
+        setProfile(profileData);
 
-      if (isEditMode) {
-        // --- EDIT EXISTING STUDENT ---
-        response = await fetch('/api/manage-student', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            uid: initialData.id,
-            action: 'edit_profile',
-            profileData: {
-              name: fullName, batch: batchName, dob, contact_no: contactNo,
-              father_name: fatherName, father_contact: fatherContact, address
-            }
-          })
-        });
-      } else {
-        // --- CREATE NEW STUDENT ---
-        response = await fetch('/api/create-student', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email, password, name: fullName, batch: batchName, dob,
-            contact_no: contactNo, father_name: fatherName,
-            father_contact: fatherContact, address
-          })
-        });
+        const { data: contentData, error: contentError } = await supabase
+          .from('course_content')
+          .select('*')
+          .eq('batch', profileData.batch)
+          .order('created_at', { ascending: false });
+
+        if (contentError) throw contentError;
+        setContent(contentData);
+
+        const latestLecture = contentData.find(item => item.content_type === 'lecture');
+        if (latestLecture) setActiveVideo(latestLecture);
+
+      } catch (error) {
+        console.error("Error loading dashboard:", error.message);
+      } finally {
+        setLoading(false);
       }
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Operation failed');
-      onSuccess(); 
-
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
     }
+
+    loadStudentData();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
   };
 
-  return (
-    <div className="modal-backdrop" style={{ padding: '1rem', boxSizing: 'border-box' }}>
-      <div className="notion-modal" style={{ width: '100%', maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto', overflowX: 'hidden', borderRadius: '6px', padding: '2rem', boxSizing: 'border-box' }}>
-        <div className="modal-header">
-          <h2>{isEditMode ? 'Edit Student Profile' : 'Add New Student'}</h2>
-          <button type="button" className="close-btn" onClick={onClose}>×</button>
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+           <div style={{ width: '30px', height: '30px', border: '3px solid #f1f5f9', borderTop: '3px solid #0f172a', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
+      </div>
+    );
+  }
+
+  const lectures = content.filter(item => item.content_type === 'lecture');
+  const notes = content.filter(item => item.content_type === 'note');
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', padding: '3rem 1.5rem', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto', animation: 'slideUp 0.3s ease-out' }}>
         
-        {error && <div style={{ background: '#fef2f2', color: '#991b1b', padding: '0.75rem', borderRadius: '6px', marginBottom: '1.5rem', border: '1px solid #fecaca' }}>{error}</div>}
+        {/* --- HEADER --- */}
+        <header className="admin-header" style={{ marginBottom: '2.5rem' }}>
+          <div>
+            <h1 className="admin-title">Student Portal</h1>
+            <p className="admin-subtitle" style={{ marginTop: '0.5rem' }}>
+              Welcome back, {profile?.name} • <span className="notion-tag gray" style={{ marginLeft: '0.5rem' }}>{profile?.batch}</span>
+            </p>
+          </div>
+          <button className="btn-notion-secondary" onClick={handleLogout}>
+            Log Out
+          </button>
+        </header>
 
-        <form className="notion-form" onSubmit={handleSubmit}>
-          
-          <h3 style={{ fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Account Configuration</h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group">
-              <label>Full Name</label>
-              <input type="text" required value={fullName} onChange={e => setFullName(e.target.value)} style={{ width: '100%' }} />
+        {/* --- VIDEO PLAYER BLOCK --- */}
+        {activeVideo ? (
+          <div style={{ border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', marginBottom: '3.5rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' }}>
+            <div style={{ padding: '1.25rem 1.5rem', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="font-medium text-dark" style={{ margin: 0, fontSize: '1.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span style={{ color: '#3b82f6', marginRight: '8px' }}>▶</span> 
+                {activeVideo.title}
+              </h2>
+              <span className="notion-tag blue" style={{ flexShrink: 0 }}>Now Playing</span>
             </div>
-            <div className="form-group">
-              <label>Target Batch</label>
-              <select value={batchName} onChange={e => setBatchName(e.target.value)} style={{ width: '100%' }}>
-                <option value="JEE 2026">JEE 2026</option>
-                <option value="NEET 2026">NEET 2026</option>
-                <option value="MHT-CET 2026">MHT-CET 2026</option>
-              </select>
-            </div>
+            <BunnyPlayer videoId={activeVideo.file_url} />
+          </div>
+        ) : (
+          <div style={{ border: '1px dashed #cbd5e1', borderRadius: '12px', padding: '4rem 2rem', textAlign: 'center', marginBottom: '3.5rem', background: '#f8fafc' }}>
+            <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: '1rem' }}>🎓</span>
+            <h3 className="font-medium text-dark" style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Ready to learn?</h3>
+            <p className="text-muted" style={{ fontSize: '0.95rem' }}>Select a video lecture from your syllabus below to begin streaming.</p>
+          </div>
+        )}
+
+        {/* --- CONTENT TABLES (SIDE-BY-SIDE) --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2.5rem' }}>
+          
+          {/* LECTURE PLAYLIST */}
+          <div className="cms-section" style={{ width: '100%' }}>
+            <h3 className="cms-section-title" style={{ fontSize: '1.05rem' }}>Lecture Syllabus</h3>
             
-            {/* Hide Email & Password fields if editing, as they are handled separately */}
-            {!isEditMode && (
-              <>
-                <div className="form-group">
-                  <label>Email Address</label>
-                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} style={{ width: '100%' }} />
-                </div>
-                <div className="form-group">
-                  <label>Temporary Password</label>
-                  <input type="text" required value={password} onChange={e => setPassword(e.target.value)} style={{ width: '100%' }} />
-                </div>
-              </>
-            )}
+            <div style={{ width: '100%', overflow: 'hidden' }}>
+              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '0' }}>
+                <colgroup>
+                  <col style={{ width: 'auto' }} />
+                  <col style={{ width: '70px' }} />
+                  <col style={{ width: '40px' }} />
+                </colgroup>
+                <tbody>
+                  {lectures.length === 0 && (
+                    <tr><td colSpan="3" className="text-muted" style={{ padding: '1.5rem 0', fontSize: '0.9rem' }}>No lectures posted yet.</td></tr>
+                  )}
+                  {lectures.map(lec => (
+                    <tr 
+                      key={lec.id} 
+                      className="notion-row"
+                      style={{ 
+                        cursor: 'pointer', 
+                        backgroundColor: activeVideo?.id === lec.id ? '#f1f5f9' : 'transparent',
+                        borderLeft: activeVideo?.id === lec.id ? '3px solid #0f172a' : '3px solid transparent'
+                      }}
+                      onClick={() => setActiveVideo(lec)}
+                    >
+                      <td className="font-medium text-dark" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '0.5rem', fontSize: '0.9rem' }}>
+                        {lec.title}
+                      </td>
+                      <td className="text-muted" style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                        {lec.duration !== 'Unknown' ? lec.duration : 'Video'}
+                      </td>
+                      <td className="actions" style={{ textAlign: 'right', paddingRight: '0.5rem' }}>
+                        {activeVideo?.id === lec.id ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#3b82f6', verticalAlign: 'middle' }}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                        ) : (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94a3b8', verticalAlign: 'middle' }}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <h3 style={{ fontSize: '0.85rem', color: '#0f172a', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem', marginBottom: '1rem', marginTop: '1rem' }}>Personal Details</h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="form-group"><label>Date of Birth</label><input type="date" value={dob} onChange={e => setDob(e.target.value)} style={{ width: '100%' }} /></div>
-            <div className="form-group"><label>Student Contact</label><input type="tel" value={contactNo} onChange={e => setContactNo(e.target.value.replace(/[^0-9+]/g, ''))} style={{ width: '100%' }} /></div>
-            <div className="form-group"><label>Father's Name</label><input type="text" value={fatherName} onChange={e => setFatherName(e.target.value)} style={{ width: '100%' }} /></div>
-            <div className="form-group"><label>Father's Contact</label><input type="tel" value={fatherContact} onChange={e => setFatherContact(e.target.value.replace(/[^0-9+]/g, ''))} style={{ width: '100%' }} /></div>
+          {/* STUDY MATERIALS */}
+          <div className="cms-section" style={{ width: '100%' }}>
+            <h3 className="cms-section-title" style={{ fontSize: '1.05rem' }}>Study Materials & Notes</h3>
+            
+            <div style={{ width: '100%', overflow: 'hidden' }}>
+              <table className="notion-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '0' }}>
+                <colgroup>
+                  <col style={{ width: 'auto' }} />
+                  <col style={{ width: '70px' }} />
+                  <col style={{ width: '40px' }} />
+                </colgroup>
+                <tbody>
+                  {notes.length === 0 && (
+                    <tr><td colSpan="3" className="text-muted" style={{ padding: '1.5rem 0', fontSize: '0.9rem' }}>No materials posted yet.</td></tr>
+                  )}
+                  {notes.map(note => (
+                    <tr key={note.id} className="notion-row">
+                      <td className="font-medium text-dark" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '0.5rem', fontSize: '0.9rem' }}>
+                        <span style={{ marginRight: '6px', color: '#94a3b8' }}>📄</span>
+                        {note.title}
+                      </td>
+                      <td className="text-muted" style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                        {note.meta_info}
+                      </td>
+                      <td className="actions" style={{ textAlign: 'right', paddingRight: '0.5rem' }}>
+                        <a href={note.file_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', lineHeight: 0 }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'stroke 0.2s', verticalAlign: 'middle' }}>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="form-group" style={{ marginTop: '0.5rem' }}>
-            <label>Home Address</label>
-            <input type="text" value={address} onChange={e => setAddress(e.target.value)} style={{ width: '100%' }} />
-          </div>
-
-          <div className="modal-actions" style={{ marginTop: '1.5rem', position: 'sticky', bottom: '-2rem', background: 'white', paddingBottom: '2rem' }}>
-            <button type="button" className="btn-notion-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-notion-primary" disabled={loading}>
-              {loading ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Account'}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );
