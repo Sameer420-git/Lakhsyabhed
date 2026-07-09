@@ -109,6 +109,26 @@ export default function AdminDashboard() {
     } catch (err) { showToast("An error occurred during deletion.", 'error'); }
   };
 
+  // --- NEW: Helper function to securely download files ---
+  const handleForceDownload = async (url, filename) => {
+    try {
+      showToast("Downloading file...", "success");
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename || 'document';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      // Fallback if CORS blocks the fetch: just open in a new tab
+      window.open(url, '_blank');
+    }
+  };
+
   const lectures = content.filter(item => item.content_type === 'lecture');
   const notes = content.filter(item => item.content_type === 'note');
 
@@ -145,19 +165,23 @@ export default function AdminDashboard() {
           </button>
         </header>
 
+        {/* STUDENT MANAGEMENT VIEW */}
         {activeTab === 'sms' && (
           <div className="notion-table-container animate-fade-in">
             <table className="notion-table" style={{ overflow: 'visible' }}>
               <thead><tr><th>Name</th><th>Batch</th><th>Contact</th><th>Status</th><th style={{ width: '50px' }}></th></tr></thead>
               <tbody>
-                {/* STALE-WHILE-REVALIDATE FIX: Only show loading if students array is completely empty */}
                 {loadingStudents && students.length === 0 ? <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>Loading students...</td></tr> : 
                  students.map(student => (
                   <tr key={student.id} className="notion-row">
                     <td className="font-medium text-dark cursor-pointer" onClick={() => setViewStudent(student)}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem' }}>
-                          {student.name.charAt(0).toUpperCase()}
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', overflow: 'hidden' }}>
+                          {student.avatar_url ? (
+                            <img src={student.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            student.name.charAt(0).toUpperCase()
+                          )}
                         </div>
                         {student.name}
                       </div>
@@ -205,13 +229,12 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* CMS TABLES */}
+        {/* CMS NOTES VIEW */}
         {activeTab === 'cms-notes' && (
           <div className="notion-table-container animate-fade-in">
-            <table className="notion-table">
+            <table className="notion-table" style={{ overflow: 'visible' }}>
               <thead><tr><th>Document Name</th><th>Target Batch</th><th>File Size</th><th style={{ width: '50px' }}></th></tr></thead>
               <tbody>
-                {/* STALE-WHILE-REVALIDATE FIX */}
                 {loadingContent && notes.length === 0 ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Loading materials...</td></tr> : 
                  notes.map(note => (
                   <tr key={note.id} className="notion-row">
@@ -220,12 +243,28 @@ export default function AdminDashboard() {
                     <td className="text-muted">{note.meta_info}</td>
                     <td style={{ position: 'relative' }}>
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === note.id ? null : note.id); }}>•••</button>
+                      
+                      {/* --- NEW PREVIEW AND DOWNLOAD ACTION MENU --- */}
                       {activeDropdown === note.id && (
-                        <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', zIndex: 10, minWidth: '120px', padding: '4px 0' }}>
+                        <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', zIndex: 10, minWidth: '150px', padding: '4px 0' }}>
+                          
+                          <button style={dropdownBtnStyle} onClick={() => { window.open(note.file_url, '_blank'); setActiveDropdown(null); }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            Preview
+                          </button>
+                          
+                          <button style={dropdownBtnStyle} onClick={() => { handleForceDownload(note.file_url, note.title); setActiveDropdown(null); }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Download
+                          </button>
+                          
+                          <div style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }}></div>
+                          
                           <button style={{...dropdownBtnStyle, color: '#b91c1c'}} onClick={() => { setDeleteConfirm({ ...note, type: 'content' }); setActiveDropdown(null); }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             Delete
                           </button>
+
                         </div>
                       )}
                     </td>
@@ -236,12 +275,12 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* CMS LECTURES VIEW */}
         {activeTab === 'cms-lectures' && (
           <div className="notion-table-container animate-fade-in">
-            <table className="notion-table">
+            <table className="notion-table" style={{ overflow: 'visible' }}>
               <thead><tr><th>Lecture Title</th><th>Target Batch</th><th>Duration</th><th style={{ width: '50px' }}></th></tr></thead>
               <tbody>
-                {/* STALE-WHILE-REVALIDATE FIX */}
                 {loadingContent && lectures.length === 0 ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Loading lectures...</td></tr> : 
                  lectures.map(lec => (
                   <tr key={lec.id} className="notion-row">
@@ -250,8 +289,16 @@ export default function AdminDashboard() {
                     <td className="text-muted">{lec.duration}</td>
                     <td style={{ position: 'relative' }}>
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === lec.id ? null : lec.id); }}>•••</button>
+                      
                       {activeDropdown === lec.id && (
-                        <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', zIndex: 10, minWidth: '120px', padding: '4px 0' }}>
+                        <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', zIndex: 10, minWidth: '150px', padding: '4px 0' }}>
+                          <button style={dropdownBtnStyle} onClick={() => { window.open(lec.file_url, '_blank'); setActiveDropdown(null); }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            View Link
+                          </button>
+
+                          <div style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }}></div>
+                          
                           <button style={{...dropdownBtnStyle, color: '#b91c1c'}} onClick={() => { setDeleteConfirm({ ...lec, type: 'content' }); setActiveDropdown(null); }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             Delete
@@ -278,8 +325,12 @@ export default function AdminDashboard() {
           <div className="notion-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px', padding: '3rem', borderRadius: '6px' }}>
             <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', borderRight: '1px solid #e2e8f0', paddingRight: '2rem', minWidth: '150px' }}>
-                <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 'bold', color: '#64748b', marginBottom: '1rem' }}>
-                  {viewStudent.name.charAt(0).toUpperCase()}
+                <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', fontWeight: 'bold', color: '#64748b', marginBottom: '1rem', overflow: 'hidden' }}>
+                  {viewStudent.avatar_url ? (
+                    <img src={viewStudent.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    viewStudent.name.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <span className={`notion-tag ${viewStudent.status === 'Suspended' ? 'red' : 'green'}`} style={{ marginBottom: '0.5rem' }}>{viewStudent.status || 'Active'}</span>
                 <span className="notion-tag gray">{viewStudent.batch}</span>
