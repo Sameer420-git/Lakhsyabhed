@@ -37,6 +37,13 @@ export default async function handler(req, res) {
         role: 'student', 
         batch: batch,
         status: 'Active'
+
+
+        dob: req.body.dob,
+        contact_no: req.body.contact_no,
+        father_name: req.body.father_name,
+        father_contact: req.body.father_contact,
+        address: req.body.address
       }
     ]);
 
