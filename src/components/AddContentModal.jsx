@@ -13,6 +13,9 @@ export default function AddContentModal({ onClose, onSuccess, type }) {
   // States for Lectures (BunnyStream)
   const [bunnyId, setBunnyId] = useState('');
   const [duration, setDuration] = useState('');
+  
+  // --- NEW: Playlist State ---
+  const [playlistName, setPlaylistName] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,7 +63,8 @@ export default function AddContentModal({ onClose, onSuccess, type }) {
           batch: batchName,
           meta_info: 'Bunny Stream', // Used for the "Hosted On" column
           file_url: bunnyId, // We repurpose the file_url column to store the Bunny ID!
-          duration: duration || 'Unknown'
+          duration: duration || 'Unknown',
+          playlist_name: playlistName || 'General Lectures' // --- NEW: Saves to DB ---
         }]);
 
         if (dbError) throw dbError;
@@ -125,16 +129,31 @@ export default function AddContentModal({ onClose, onSuccess, type }) {
             </div>
           ) : (
             <div className="animate-fade-in">
+              {/* --- NEW: Playlist Input --- */}
               <div className="form-group">
-                <label>Bunny Video ID / URL</label>
+                <label>Playlist Category</label>
                 <input 
                   type="text" 
-                  placeholder="e.g. 8a4b2c..." 
+                  placeholder="e.g. Physics - Mechanics (Leave blank for General)" 
+                  value={playlistName}
+                  onChange={(e) => setPlaylistName(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Bunny Video ID</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. c9eb5659-ced6..." 
                   value={bunnyId}
                   onChange={(e) => setBunnyId(e.target.value)}
                   required 
                 />
+                <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                  Paste ONLY the Video ID here, not the full URL.
+                </span>
               </div>
+
               <div className="form-group">
                 <label>Video Duration (Optional)</label>
                 <input 

@@ -3,7 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import AddStudentModal from '../../components/AddStudentModal';
 import AddContentModal from '../../components/AddContentModal';
+import BunnyPlayer from '../../components/BunnyPlayer'; // <-- NEW IMPORT
 
+// --- 1. GLOBALS MOVED TO THE TOP FOR MAXIMUM CRASH PREVENTION ---
+const dropdownBtnStyle = { 
+  display: 'flex', 
+  alignItems: 'center', 
+  gap: '10px', 
+  width: '100%', 
+  padding: '0.65rem 1rem', 
+  background: 'none', 
+  border: 'none', 
+  textAlign: 'left', 
+  cursor: 'pointer', 
+  fontSize: '0.85rem', 
+  color: '#334155', 
+  fontWeight: 500,
+  transition: 'background 0.15s ease'
+};
+
+const DetailField = ({ label, value }) => (
+  <div>
+    <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{label}</span>
+    <span style={{ fontSize: '0.95rem', color: value && value !== 'Hidden/Unknown' ? '#0f172a' : '#cbd5e1' }}>{value || 'Not provided'}</span>
+  </div>
+);
+
+// --- 2. MAIN COMPONENT ---
 export default function AdminDashboard() {
   const navigate = useNavigate();
   
@@ -15,6 +41,7 @@ export default function AdminDashboard() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [viewStudent, setViewStudent] = useState(null); 
   const [editStudent, setEditStudent] = useState(null); 
+  const [previewVideo, setPreviewVideo] = useState(null); // <-- NEW STATE FOR BUNNY PLAYER
   
   const [refreshTrigger, setRefreshTrigger] = useState(0); 
 
@@ -65,12 +92,16 @@ export default function AdminDashboard() {
   const handleStatusToggle = async (student) => {
     const newStatus = student.status === 'Suspended' ? 'Active' : 'Suspended';
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       await fetch('/api/manage-student', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}` 
+        },
         body: JSON.stringify({ uid: student.id, action: 'update_status', status: newStatus })
       });
-      showToast(`${student.name}'s account is now ${newStatus}.`, 'success');
+      showToast(`${student.name || 'Student'}'s account is now ${newStatus}.`, 'success');
       setRefreshTrigger(prev => prev + 1);
     } catch (err) { showToast("Error changing account status.", 'error'); }
   };
@@ -80,12 +111,16 @@ export default function AdminDashboard() {
       return showToast("Password must be at least 6 characters.", 'error');
     }
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       await fetch('/api/manage-student', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}` 
+        },
         body: JSON.stringify({ uid: passwordPrompt.id, action: 'reset_password', newPassword: newPasswordInput })
       });
-      showToast(`Password updated for ${passwordPrompt.name}.`, 'success');
+      showToast(`Password updated.`, 'success');
       setPasswordPrompt(null);
       setNewPasswordInput('');
       setRefreshTrigger(prev => prev + 1);
@@ -95,21 +130,24 @@ export default function AdminDashboard() {
   const executeDelete = async () => {
     try {
       if (deleteConfirm.type === 'student') {
+        const { data: { session } } = await supabase.auth.getSession();
         await fetch('/api/manage-student', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`
+          },
           body: JSON.stringify({ uid: deleteConfirm.id })
         });
       } else {
         await supabase.from('course_content').delete().eq('id', deleteConfirm.id);
       }
-      showToast(`${deleteConfirm.title || deleteConfirm.name} successfully deleted.`, 'success');
+      showToast(`Record successfully deleted.`, 'success');
       setDeleteConfirm(null);
       setRefreshTrigger(prev => prev + 1);
     } catch (err) { showToast("An error occurred during deletion.", 'error'); }
   };
 
-  // --- NEW: Helper function to securely download files ---
   const handleForceDownload = async (url, filename) => {
     try {
       showToast("Downloading file...", "success");
@@ -124,7 +162,6 @@ export default function AdminDashboard() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      // Fallback if CORS blocks the fetch: just open in a new tab
       window.open(url, '_blank');
     }
   };
@@ -134,7 +171,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-layout">
-      {/* MOBILE HEADER */}
       <div className="mobile-admin-header">
         <div className="sidebar-brand" style={{ marginBottom: 0 }}><h2>Lakhsyabhed</h2><span className="brand-badge">Admin</span></div>
         <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
@@ -142,7 +178,6 @@ export default function AdminDashboard() {
 
       {isSidebarOpen && <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>}
 
-      {/* SIDEBAR */}
       <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand desktop-only"><h2>Lakhsyabhed</h2><span className="brand-badge">Admin</span></div>
         <nav className="sidebar-nav">
@@ -154,7 +189,6 @@ export default function AdminDashboard() {
         <button className="nav-item logout-btn" style={{ marginTop: 'auto' }} onClick={handleLogout}>Log Out</button>
       </aside>
 
-      {/* MAIN MAIN VIEW */}
       <main className="admin-main">
         <header className="admin-header">
           <div>
@@ -180,10 +214,10 @@ export default function AdminDashboard() {
                           {student.avatar_url ? (
                             <img src={student.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
-                            student.name.charAt(0).toUpperCase()
+                            (student.name || '?').charAt(0).toUpperCase()
                           )}
                         </div>
-                        {student.name}
+                        {student.name || 'Unknown Student'}
                       </div>
                     </td>
                     <td><span className="notion-tag gray">{student.batch || 'Unassigned'}</span></td>
@@ -238,33 +272,27 @@ export default function AdminDashboard() {
                 {loadingContent && notes.length === 0 ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Loading materials...</td></tr> : 
                  notes.map(note => (
                   <tr key={note.id} className="notion-row">
-                    <td className="font-medium text-dark">📄 {note.title}</td>
-                    <td><span className="notion-tag gray">{note.batch}</span></td>
+                    <td className="font-medium text-dark">📄 {note.title || 'Untitled Document'}</td>
+                    <td><span className="notion-tag gray">{note.batch || 'Unassigned'}</span></td>
                     <td className="text-muted">{note.meta_info}</td>
                     <td style={{ position: 'relative' }}>
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === note.id ? null : note.id); }}>•••</button>
                       
-                      {/* --- NEW PREVIEW AND DOWNLOAD ACTION MENU --- */}
                       {activeDropdown === note.id && (
                         <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', zIndex: 10, minWidth: '150px', padding: '4px 0' }}>
-                          
                           <button style={dropdownBtnStyle} onClick={() => { window.open(note.file_url, '_blank'); setActiveDropdown(null); }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             Preview
                           </button>
-                          
                           <button style={dropdownBtnStyle} onClick={() => { handleForceDownload(note.file_url, note.title); setActiveDropdown(null); }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             Download
                           </button>
-                          
                           <div style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }}></div>
-                          
                           <button style={{...dropdownBtnStyle, color: '#b91c1c'}} onClick={() => { setDeleteConfirm({ ...note, type: 'content' }); setActiveDropdown(null); }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             Delete
                           </button>
-
                         </div>
                       )}
                     </td>
@@ -284,21 +312,22 @@ export default function AdminDashboard() {
                 {loadingContent && lectures.length === 0 ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>Loading lectures...</td></tr> : 
                  lectures.map(lec => (
                   <tr key={lec.id} className="notion-row">
-                    <td className="font-medium text-dark">▶ {lec.title}</td>
-                    <td><span className="notion-tag gray">{lec.batch}</span></td>
+                    <td className="font-medium text-dark">▶ {lec.title || 'Untitled Lecture'}</td>
+                    <td><span className="notion-tag gray">{lec.batch || 'Unassigned'}</span></td>
                     <td className="text-muted">{lec.duration}</td>
                     <td style={{ position: 'relative' }}>
                       <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem' }} onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === lec.id ? null : lec.id); }}>•••</button>
                       
                       {activeDropdown === lec.id && (
                         <div style={{ position: 'absolute', right: '40px', top: '10px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', zIndex: 10, minWidth: '150px', padding: '4px 0' }}>
-                          <button style={dropdownBtnStyle} onClick={() => { window.open(lec.file_url, '_blank'); setActiveDropdown(null); }}>
+                          
+                          {/* --- UPDATED PREVIEW BUTTON FOR ADMIN INTEGRATION --- */}
+                          <button style={dropdownBtnStyle} onClick={() => { setPreviewVideo(lec); setActiveDropdown(null); }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            View Link
+                            Preview Video
                           </button>
 
                           <div style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }}></div>
-                          
                           <button style={{...dropdownBtnStyle, color: '#b91c1c'}} onClick={() => { setDeleteConfirm({ ...lec, type: 'content' }); setActiveDropdown(null); }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             Delete
@@ -313,6 +342,22 @@ export default function AdminDashboard() {
           </div>
         )}
       </main>
+
+      {/* --- NEW: BUNNY PLAYER PREVIEW MODAL --- */}
+      {previewVideo && (
+        <div className="modal-backdrop" onClick={() => setPreviewVideo(null)}>
+          <div className="notion-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px', width: '95%', padding: '1.5rem', borderRadius: '12px' }}>
+            <div className="modal-header" style={{ marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.25rem', color: '#0f172a' }}>{previewVideo.title || 'Video Preview'}</h2>
+              <button className="close-btn" onClick={() => setPreviewVideo(null)}>×</button>
+            </div>
+            <div style={{ background: '#000', borderRadius: '8px', overflow: 'hidden' }}>
+              {/* Functionally rendering the player with the video ID stored in file_url */}
+              <BunnyPlayer videoId={previewVideo.file_url} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODALS */}
       {showAddModal && <AddStudentModal onClose={() => setShowAddModal(false)} onSuccess={() => { setShowAddModal(false); setRefreshTrigger(prev => prev + 1); showToast("Student account initiated."); }} />}
@@ -329,19 +374,19 @@ export default function AdminDashboard() {
                   {viewStudent.avatar_url ? (
                     <img src={viewStudent.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    viewStudent.name.charAt(0).toUpperCase()
+                    (viewStudent.name || '?').charAt(0).toUpperCase()
                   )}
                 </div>
                 <span className={`notion-tag ${viewStudent.status === 'Suspended' ? 'red' : 'green'}`} style={{ marginBottom: '0.5rem' }}>{viewStudent.status || 'Active'}</span>
-                <span className="notion-tag gray">{viewStudent.batch}</span>
+                <span className="notion-tag gray">{viewStudent.batch || 'Unassigned'}</span>
               </div>
               
               <div style={{ flex: 1 }}>
                 <div className="modal-header">
-                  <h2 style={{ fontSize: '1.75rem', marginBottom: '0' }}>{viewStudent.name}</h2>
+                  <h2 style={{ fontSize: '1.75rem', marginBottom: '0' }}>{viewStudent.name || 'Unknown Student'}</h2>
                   <button className="close-btn" onClick={() => setViewStudent(null)}>×</button>
                 </div>
-                <p style={{ color: '#3b82f6', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem' }}>{viewStudent.email}</p>
+                <p style={{ color: '#3b82f6', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem' }}>{viewStudent.email || 'No Email'}</p>
                 
                 <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '1rem', borderRadius: '6px', marginBottom: '2rem' }}>
                   <DetailField label="Account Password" value={viewStudent.plain_password || 'Hidden/Unknown'} />
@@ -368,7 +413,7 @@ export default function AdminDashboard() {
               <h2 style={{ fontSize: '1.2rem' }}>Force Password Override</h2>
               <button className="close-btn" onClick={() => setPasswordPrompt(null)}>×</button>
             </div>
-            <p className="modal-description">Directly overwrite authentication credentials for <strong>{passwordPrompt.name}</strong> without email verification.</p>
+            <p className="modal-description">Directly overwrite authentication credentials for <strong>{passwordPrompt.name || 'this user'}</strong> without email verification.</p>
             <div className="form-group" style={{ marginBottom: '1.5rem' }}>
               <input type="text" placeholder="Enter absolute new password..." value={newPasswordInput} onChange={e => setNewPasswordInput(e.target.value)} style={{ width: '100%', padding: '0.8rem', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }} />
             </div>
@@ -386,7 +431,7 @@ export default function AdminDashboard() {
           <div className="notion-modal" style={{ maxWidth: '400px', borderTop: '4px solid #ef4444', borderRadius: '6px' }}>
             <h2 style={{ fontSize: '1.15rem', color: '#0f172a', marginBottom: '0.5rem', fontWeight: '700' }}>Confirm Deletion</h2>
             <p className="modal-description">
-              You are removing <strong>{deleteConfirm.name || deleteConfirm.title}</strong> permanently from the system records. This operation cannot be reversed.
+              You are removing <strong>{deleteConfirm.name || deleteConfirm.title || 'this record'}</strong> permanently from the system records. This operation cannot be reversed.
             </p>
             <div className="modal-actions" style={{ marginTop: '1.5rem' }}>
               <button className="btn-notion-secondary" onClick={() => setDeleteConfirm(null)}>Cancel</button>
@@ -427,27 +472,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
-// Global flexbox configuration alignment layout override for action elements
-const dropdownBtnStyle = { 
-  display: 'flex', 
-  alignItems: 'center', 
-  gap: '10px', 
-  width: '100%', 
-  padding: '0.65rem 1rem', 
-  background: 'none', 
-  border: 'none', 
-  textAlign: 'left', 
-  cursor: 'pointer', 
-  fontSize: '0.85rem', 
-  color: '#334155', 
-  fontWeight: 500,
-  transition: 'background 0.15s ease'
-};
-
-const DetailField = ({ label, value }) => (
-  <div>
-    <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{label}</span>
-    <span style={{ fontSize: '0.95rem', color: value && value !== 'Hidden/Unknown' ? '#0f172a' : '#cbd5e1' }}>{value || 'Not provided'}</span>
-  </div>
-);

@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function BunnyPlayer({ videoId }) {
   // Replace this with your actual Bunny.net Stream Library ID
-  const LIBRARY_ID = "123456"; 
+  const LIBRARY_ID = "703635"; 
 
   return (
     <div style={{ 
