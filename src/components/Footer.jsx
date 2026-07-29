@@ -15,7 +15,7 @@ export default function Footer() {
         
         <div className="footer-links">
           <h4>Contact Us</h4>
-          <p>📞 +91 84599 22647</p>
+          <p>📞 +91 8329358576</p>
           <p>📧 info@lakhsyabhed.in</p>
         </div>
 
