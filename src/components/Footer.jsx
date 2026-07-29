@@ -16,13 +16,13 @@ export default function Footer() {
         <div className="footer-links">
           <h4>Contact Us</h4>
           <p>
-            <a href="tel:+918459922647" className="footer-interactive-link">
-              📞 +91 84599 22647
+            <a href="tel:+918329358576" className="footer-interactive-link">
+              📞 +91 8329358576
             </a>
           </p>
           <p>
             <a href="mailto:info@lakhsyabhed.in" className="footer-interactive-link">
-              📧 info@lakhsyabhed.in
+              📧 lakshyabhedinstitute26@gmail.com
             </a>
           </p>
         </div>
@@ -39,7 +39,7 @@ export default function Footer() {
             
             {/* Live Instagram Capsule Link */}
             <a 
-              href="https://instagram.com" 
+              href="https://www.instagram.com/lakshyabhedinstitute_jee_neet?igsh=MThheTlkY2RqbnVjbQ%3D%3D&utm_source=qr" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="social-capsule instagram-btn"
@@ -49,7 +49,7 @@ export default function Footer() {
 
             {/* Live YouTube Channel Capsule Link */}
             <a 
-              href="https://youtube.com" 
+              href="https://www.youtube.com/channel/UCxsokuIVUteTRxfEuJIXaqA" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="social-capsule youtube-btn"
