@@ -9,7 +9,7 @@ export default function Header({ setShowModal }) {
   return (
     <>
       <div className="top-bar">
-        <div>📞 Admissions open for 2026 batches · Call <span>+91 84599 22647</span></div>
+        <div>📞 Admissions open for 2026 batches · Call <span>+91 8329358576</span></div>
         <div>Follow us on Socials</div>
       </div>
       
