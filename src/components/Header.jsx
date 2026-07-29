@@ -18,7 +18,7 @@ export default function Header({ setShowModal }) {
           <img src={logo} alt="Lakhsyabhed Institute Logo" className="brand-logo" />
           <div className="brand-text">
             <h1>Lakhsyabhed Institute</h1>
-            <p>Since 2015 · Virar</p>
+            <p>Since 2026 · Kota</p>
           </div>
         </div>
 
