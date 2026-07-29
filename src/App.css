@@ -251,6 +251,69 @@ footer { background: #030812; padding: 4rem 5% 2rem; color: var(--text-muted-lig
 .footer-links h4 { color: white; margin-bottom: 1.5rem; }
 .footer-links p, .footer-links a { color: var(--text-muted-light); text-decoration: none; margin-bottom: 0.8rem; display: block; font-size: 0.95rem; }
 .footer-bottom { text-align: center; padding-top: 2rem; font-size: 0.85rem; }
+/* Update your existing footer grid container to scale to 4 items */
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  padding: 2rem 5%;
+}
+
+/* Base Styles for the clickable contact links */
+.footer-interactive-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-interactive-link:hover {
+  color: var(--brand-yellow, #f1b319);
+}
+
+/* --- Social Media Pill layout --- */
+.social-capsules {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 160px;
+  margin-top: 0.5rem;
+}
+
+.social-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 50px; /* Perfect pill capsule border shape */
+  text-decoration: none;
+  color: #ffffff !important; /* Forces link text color to stay white */
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.social-capsule:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.instagram-btn {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+.youtube-btn {
+  background-color: #ff0000;
+}
+
+/* Adaptive mobile rules */
+@media (max-width: 500px) {
+  .social-capsules {
+    flex-direction: row;
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
 
 /* --- Modal Overlays --- */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 18, 36, 0.85); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 200; }
