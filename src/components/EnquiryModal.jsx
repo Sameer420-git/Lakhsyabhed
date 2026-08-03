@@ -1,15 +1,44 @@
 import React, { useState } from 'react';
+import emailjs from '@emailjs/browser';
 
 export default function EnquiryModal({ setShowModal, handleEnquirySubmit }) {
   const [formData, setFormData] = useState({ name: '', phone: '', course: 'XI-XII Science' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false); // Tracks if the message should show
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Send data to the handleEnquirySubmit function in App.jsx (which sends it to Supabase)
-    await handleEnquirySubmit(formData); 
-    setIsSubmitting(false);
+    setShowSuccess(false); // Reset in case they submit multiple times
+
+    try {
+      // 1. Send data to Supabase 
+      await handleEnquirySubmit(formData); 
+
+      // 2. Send the Email notification via EmailJS
+      await emailjs.send(
+        'service_2idflqd',        
+        'template_en3g4g2',       
+        {
+          name: formData.name,     
+          phone: formData.phone,   
+          course: formData.course  
+        },
+        '97aaeZ58jfTJSh1T7PtAV'   
+      );
+
+      // Show the inline success message
+      setShowSuccess(true);
+      
+      // Optional: Clear the form fields after successful submission
+      setFormData({ name: '', phone: '', course: 'XI-XII Science' });
+
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Failed to submit enquiry. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,6 +85,19 @@ export default function EnquiryModal({ setShowModal, handleEnquirySubmit }) {
             </select>
           </div>
           
+          {/* Success Message appears directly above the button */}
+          {showSuccess && (
+            <div style={{ 
+              color: '#4CAF50', 
+              fontSize: '14px', 
+              textAlign: 'center', 
+              marginBottom: '15px',
+              fontWeight: 'bold'
+            }}>
+              Thank you! Our team will contact you soon.
+            </div>
+          )}
+
           <button 
             type="submit" 
             className="btn-yellow submit-btn" 
