@@ -24,7 +24,7 @@ export default function EnquiryModal({ setShowModal, handleEnquirySubmit }) {
           phone: formData.phone,   
           course: formData.course  
         },
-        '97aaeZ58jfTJSh1T7PtAV'   
+        'a6LaBJcVu7CUqS1V3'   
       );
 
       // Show the inline success message
